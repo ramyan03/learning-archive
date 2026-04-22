@@ -1,0 +1,57 @@
+LCP - Largest Contentful Paint
+    - How long is takes for the biggest element in website to appear (text, image, etc): Good is less than 2 seconds
+    - Factors
+        - Slow server speeds
+        - Render blocking resources preventing image loading sooner
+        - Lazy loading LCP images
+        - Big image sizes or non responsive image formats
+CLS - Cumulative Layout Shift
+    - Sum of individual layout shifts in a certain time window of 5 seconds. Avoid layout shifts. <0.1 is good.
+    - Impact fraction measures how much of the screen area is impacted.
+    - Distance fraction measures how far an element has moved.
+    - Factors
+        - JavaScript and images load later than the rest of the content on the page
+        - Web fonts changing size of rendered text
+INP - Interaction to Next Paint
+    - Time elapsed from user clicking something and page responds -> <200ms is good.
+    - Factors
+        - Slow devices
+        - Slow event handlers
+        - 3rd party handlers
+
+Ex: Pinterest found that time for image to load was most important to them
+
+Data
+    - Field data -> Real users, Chrome User Experience that gives us insight to ux
+        - 99th percentile is not as important because it can include things out of your control
+    - Lab test -> Controlled environment where we can change variables to see what the impact is of optimizations
+
+Optimize
+    - LCP
+        - Time to first byte -> Reduce server response time, use a CDN (content delivery network is a geographically distributed group of servers that caches cntent close to end-users), upgrade hosting
+        - Resource load delay -> Preload critical resources, avoid render-blocking CSS and JS
+        - Resource load time -> Compress images, use modern formats, serve appropriately sized images
+        - Render delay -> Avoid lazy loading the LCP element, ensure LCP image is in initial HTML, not injected by JS and remove unnecessary CSS blocking paint
+    
+    - CLS
+        - Always set explicit width and height on images and video elements so browser reserves space before they load
+        - Fallback fonts so text does not reflow when web font loads
+        - Remove timeouts in JS to avoid inserting content above existing content dynamically
+        - Reserve space for ads, embeds and iframes with fixed container before they load
+        - Avoid animating top, left, margin, padding - use transform and opacity instead since they do not trigger layout
+    
+    - IMP
+        - Iterative process -> Measure, fix one thing, measure again
+        - Metrics
+            - Input delay -> Reduce long tasks blocking the main thread, break up heavy JS with setTimeout or scheduler API
+            - Processing time -> Optimize slow event handlers, defer non-critical JS, avoid synchronous laout reads inside event handlers
+            - Presentation delay -> Minimize queued up interactions, recalculating page layout, avoid reading layout properties like offsetHeight inside loops
+
+Practical fix: SSR (Server Side Rendering) improves LCP because server sends fully rendered HTML instead of empty shell that waits for JS. Angular supports SSR via Angular Universal
+
+Example: For a data-heavy internal tool like a fund management dashboard, LCP matters most because table is largest element. I would preload the API call, make sure the table renders server-side where possible,
+    and avoid lazy loading during initial data. For CLS, I would set fixed heights on table rows during skeleton loading state so layout does not jump when data arrives.
+
+DeBug Bear
+Lighthouse in DevTools
+Web Vitals JS library

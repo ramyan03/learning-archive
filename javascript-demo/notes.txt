@@ -1,0 +1,6 @@
+Notes
+
+Browsers have JavaScript Engine
+Node is a C++ program that can run JS outside of browser 
+ECMAScript is a specification, JavaScript is a programming language
+

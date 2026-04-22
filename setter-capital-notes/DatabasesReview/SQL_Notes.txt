@@ -1,0 +1,66 @@
+SQL Indexing
+
+- Indexes improve query performance by allowing the database to locate rows faster. It uses a lookup structure like a B-Tree (self balancing tree) with indexes as opposed to scanning an entire table.
+- Benefits are faster SELECT queries and faster filtering but slower INSERT/UPDATE because index must be updated.
+
+SQL Partitioning
+
+- Partitioning splits a large table into smaller logical pieces and is used for very large datasets. We can have range partition (split by value ranges), list partition (split by categories), hash partition (distributed using hash function)
+
+MVP → Minimum Viable Product
+
+- Simplest version of a product that still delivers value. The purpose is to test an idea quickly, gather user feedback and reduce development risk. Example: Instead of building full AI platform, MVP might include simple model, basic UI, limited features then improve iteratively.
+
+SQL
+
+- SELECT statement is how you query data from tables. Use SELECT (columns) FROM (table name) WHERE (condition) followed by the action, so it can be ORDER BY, LIMIT, etc.
+- JOINS are where we combined data from multiple tables.
+    - Inner join combines only matching rows from both tables
+    - Left join combines all rows from left table and matching from right
+    - Right join combines all rows from right table and matching from left
+    - Full outer join combines all rows from both tables, and is NULL if no match
+- INDEXING
+    - Speeds up queries, especially SELECTS with WHERE clauses.
+    - Can use Primary Key index (Automatically created on PK), Unique index (enforces uniqueness), Non-Unique index (speeds up filtering/sorting)
+- Partitioning
+    - Splits tables into smaller, manageable pieces (range, list, hash)
+    - PARTITION BY RANGE (condition)
+- Normalization reduces redundancy and improves data integrity.
+    - 1NF is where each columns contains atomic value, no repeating groups. Example is a table with phone1, phone2 → Split into separate rows
+        - Atomic columns
+    - 2NF is 1NF + every non-key column depends on the whole primary key. Example is a table with composite PK (student_id, course_id), grade depends on both
+        - Fully functionally dependent
+    - 3NF is 2NF + no transitive dependencies (non-key column depends on another non-key). As an example, employee table with employee_id → department_id → department_name. Then, we move department_name to a different table.
+        - No indirect dependencies
+- Aggregate functions
+    - Using COUNT, SUM, AVG, MIN, MAX, GROUP BY (aggregate per grou), HAVING (filter groups)
+- Subqueries
+    - Nested queries for dynamic filtering
+        
+        ```sql
+        SELECT firstName, lastName
+        FROM employees
+        WHERE department_id = {
+        	SELECT department_id
+        	FROM department
+        	WHERE department_name = 'Finance'
+        };
+        ```
+        
+- Views
+    - Logical tables for simplified queries
+        
+        ```sql
+        CREATE VIEW finance_employees AS
+        SELECT firstName, lastName
+        FROM employees
+        WHERE department = 'Finance';
+        ```
+        
+- Primary Keys are unique identifiers for tables
+- Foreign Keys are what permit cross referencing related data across tables
+- CRUD → Create, Read, Update, Delete
+- Cascade
+    - On delete, we want to remove parent references. So if something gets deleted and another thing is referencing it, we want to delete that as well.
+- INT, VARCHAR(max), BIGINT stores large numbers, BIGSERIAL is pseudo-type that automatically creates BIGINT column with associated sequence generator to make it an auto incrementing field
+- CHECK are constraints/conditions that we run to return data from tables that pass check

@@ -1,0 +1,201 @@
+- Node.js, Express.js
+    - Node Overview
+        - Node is a runtime environment that lets you run JavaScript outside of the browser. Its built on Chrome V8 JS engine and is single threaded (one operation at a time). It is non blocking and asynchronous, so while waiting for longer operations, it can handle other requests instead of sitting idle. This means that it is great for I/O heavy applications (APIs, real time apps, data pipelines) but not great for CPU heavy tasks that block the single thread.
+    - Express Overview
+        - Minimal web framework built on top of Node.js. Node alone can handle HTTP requests but it is low level. Express adds clean layer on top for defining routes, handling middleware and sending responses. Node is like the engine, Express is like the Car built around the engine.
+        - App is the main application object created by calling express(). Its used to configure the server, define routes and apply middleware
+            
+            ```jsx
+            import express, { Request, Response } from 'express'
+            
+            const app = express()
+            const port = process.env.PORT || 3000
+            
+            app.listen(port, () => {
+              console.log(`Server running at http://localhost:${port}`)
+            })
+            
+            // Express creates the Express application instance. Everything hangs off this object
+            // process.env.PORT || 3000 reads PORT from environment variables. Falls back to 3000 locally. Hardcoding breaks in production
+            // app.listen starts the HTTP server and binds it to the port.
+            ```
+            
+    - Middleware
+        - Most important concept in Express. Middleware function runs between request arriving and the route handler responding. Order matters here, so middleware runs in order it is declared. It must either call next() to continue or send a response. If it does neither, the request hangs forever. Always declare middleware before routes
+            - app.use() is used to mount middleware functions
+            - app.get() handles GET requests for specific route
+            - app.route() defines multiple HTTP methods for a single route. Its used for when multiple HTTP methods need to be handled for the same path
+        - Types of middleware
+            - Application-level middleware
+                - Bound to instance of express application and executed for every incoming request. Defined using app.use() method. Can perform logging, auth, setting global vars, etc.
+            - Router-level middleware
+                - Specific to particular router instance. Bound to instance of express.Router() → Used to create new router object to handle requests
+            - Error-handling middleware
+            - Built-in middleware
+            - Third-party middleware
+        - Route parameters → Used to identify specific resource or set of resources within a collection. Essential for defining unique endpoints for individual items. Typically marked with : followed by parameter name in route definition → /api/funds/:id
+        - Query strings → Used for filtering, sorting, pagination or passing optional, non-essential data that doesn’t uniquely identify a single resource. Appears at end of URL starting with ? mark followed by key=value pairs and can combine using &
+        - Req is the request object that represents the incoming client request. It contains methods for accessing request information
+            - Methods
+                - params → route parameters (eg. In app.get(/user/id), you can access ID via req.params.id. Also req.params.index to access. Always strings, index is the only number
+                - query → query string parameters after ? (eg. /search?term=nodejs can be accessed via req.query.term. Can combine using &
+                - body → body of the request (for POST or PUT methods) and requires middleware like express.json() or express.urlencoded(). Access name using req.body.name
+                - headers → Access request headers
+                - method → Contains HTTP method as string
+                - url → Contains URL path of request
+        - Res is the response object that represents the outgoing server response. It contains methods for sending data back to client
+            - Methods
+                - send() → Sends HTTP response, automatically setting the correct content type for various data types
+                - json() → Sends JSON response
+                - status() → Sets HTTP status code (eg. 404)
+                - sendFile() → Sends a file as the response
+                - redirect() → Redirects client to different URL
+                - set() or header() → Set custom response header
+            
+            ```jsx
+            app.use((req, res, next) => {
+              console.log(`${req.method} ${req.url}`)
+              next()
+            })
+            
+            // Built in
+            
+            app.use(express.json())
+            // Parses incoming JSON request bodies
+            // Without this, req.body is undefined for PUT and POST requests
+            
+            app.use(express.urlencoded({extended=true}))
+            // Parses form data
+            
+            app.use(express.static('public'))
+            // Serves static files from the /public folder
+            
+            // Third party
+            import cors from "cors";
+            app.use(cors())
+            // Allows cross origin requests
+            // Needed when frontend and backend run on different ports
+            ```
+            
+        - Cors is needed because browsers block requests from one origin (port or domain) to another by default. For instance, an Angular app running on port 4300 calling Express on port 3000 is cross-origin. Without cors, the browser blocks request before it reaches server. Can fail if there are no headers, if there is a mismatched origin, restricted HTTP methods, etc. Can restrict is by calling:
+            
+            ```jsx
+            app.use(cors({ origin: '(https://yourfrontend.com' }))
+            ```
+            
+        - Error middleware has 4 parameters. Express identifies it by the err first argument. This caches and processes errors occurring during request handling, preventing application crashes. It typically logs errors and sends formatted JSON to client. Invoke it by passing err into next() function → next(err). Place at end of stack after all app.use() and route calls to ensure it handles errors correctly
+            
+            ```jsx
+            app.use((err: Error, req: Request, res: Response, next: Function) => {
+            	console.log(err.message)
+            	res.status(500).json({error: 'Internal server error'})
+            })
+            ```
+            
+        - Built in Middleware
+            - ExpressJson() → Used to parse incoming JSON requests. Automatically parses request body if Content-Type header is set to application/json
+            - express.Router() → Often used to create modular route handlers. Allows you to group route handlers together and use them as middleware
+            - express.static() → Middleware used to serve static files such as images, CSS and JS files, from specified directory
+    - Routing
+        - Used to map different URLs and incoming HTTP requests to specific pieces of code to organize application logic.
+            
+            ```jsx
+            app.get('/api/funds', (req: Request, res: Response) => {
+              res.json({ message: 'get all funds' })
+            })
+            
+            app.post('/api/funds', (req: Request, res: Response) => {
+              res.status(201).json({ message: 'fund created' })
+            })
+            
+            app.put('/api/funds/:id', (req: Request, res: Response) => {
+              res.json({ message: 'fund updated' })
+            })
+            
+            app.delete('/api/funds/:id', (req: Request, res: Response) => {
+              res.json({ message: 'fund deleted' })
+            })
+            ```
+            
+        - Sample flow
+            - HTTP request that shows incoming request with method and path → GET /users
+            - Route matching that lists all defined routes and shows which route matches request and which do not
+            - Handler execution which indicates that the matching route’s handler function is executed (req, res)
+            - Sends response back to client using res.send(), res.json(), res.render(), etc.
+        - HTTP
+            - Methods
+                - GET → Read data, no body, Idempotent (repeating call will result in same output)
+                - POST → Create resource, has body, Not Idempotent
+                - PUT → Update full resource, has body, Idempotent (same update will not change)
+                - PATCH → Update partial resource, has body, Idempotent
+                - DELETE → Delete resource, no body, Idempotent
+            - Codes
+                - 200 OK → For GET, PUT, PATCH, DELETE
+                - 201 OK Created → For POST
+                - 204 No Content → Successful but nothing to return
+                - 400 Bad Request → Client side
+                - 401 Unauthorized → Authentication problem
+                - 403 Forbidden → Authorization problem
+                - 404 Not Found → Resource not available
+                - 500 Internal Server Error → Server side issue
+    - Other Important Topics
+        - Async/Await
+            - This is the syntax for handling asynchronous operations in JS using promises. The async keyword marks a function as returning a promise and await pauses execution of that function until the promise resolves. It does not block the main thread but rather it allows event loop to continue processing other tasks while waiting for operations like DB queries or API calls. Errors in async functions are typically handled using try/catch
+            - Event loop is what makes this possible. The code runs on call stack and async operations like DB queries or API calls are offshored to Web APIs or Node APIs. When they finish, callbacks go to queues. The Event loop checks if stack is empty then pulls from queue.
+                - Queues → Microtask queue (high priority) has Promise.then(), await, queueMicroTask. Callback queue (low priority) has setTimeout, setInterval, I/O callbacks
+            - Promises are future values that can be pending, fulfilled, rejected. Their then()  handlers run as microtasks (callbacks go to microtask queue)
+        - Environment Variables
+            - File to hold PORT, URLs, Keys, and more. Never public and never pushed, always put in .gitignore
+        - File System
+            - Read, Write system to various files and file types. Is normally async but there is readFileSync which blocks the event loop until file is read to prevent other resources from accessing it or modifying it. Async is production level however, and is non-blocking
+            - path.join(__dirname, “…”) is preferred since we want absolute path over relative path. Relative path will break depending on where node is run from and might change based on OS as well.
+        - Bcrypt
+            - Bcrypt is a password hashing function which is used to securely hash and store user passwords. It is designed to be slow and computationally intensive, making it resistant to brute-force attacks and rainbow table attacks. Bcrypt is a key component in enhancing the security of user authentication systems.
+    - REST API
+        - It is stateless so every request must contain all information needed to process it. Server does not store session state between requests. Each request stands completely alone
+        - Principles: Resources are nouns, not verbs → GET /api/funds not GET /api/getfunds
+        - Nested routes: GET /api/funds/:id/managers
+        - Full Request lifecycle
+            - Client sends request → Express receives it on open port → cors() middleware runs and adds CORS headers → express.json() runs and parses body → Other custom middleware runs → Route handler matches URL and method → Handler sends response back to client
+        - JSON → JavaScript Object Notation where every key is a string
+            - Stringify to make into JSON
+            - Parse to turn JSON back into JS
+        - Axios (React)
+            - Makes alias for all the most commonly used request methods (get, post, put, patch, delete)
+            - Lightweight compared to HTTPS
+            - Automatically parses JSON → No need to call .json() like with fetch
+            - Automatically throws errors on 4xx and 5xx status codes whereas fetch doesn’t
+            - Response data is always in [response.data](http://response.data)
+        - Security
+            - No authentication
+                - Rate limit → Set amount of requests in timeframe to prevent spam
+            - Basic authentication
+                - Username and password provided to API (Base 64 encoded string)
+                - Add to authorization header → Automatically encoded to string in header
+                - Sent over HTTPS to protect
+            - API Key authorization
+                - Authorization is something that allows you to use API
+                - Generate API Key
+            - Token based authentication
+                - Generate token after logging in with user and password
+                - Token passed back as third party which we then use to access API
+                - Ex: Sign in on Google to access API. Token is generated and sent back to us.
+                - Industry standard is OAuth
+                - Bearer token authentication
+    - Important things to know
+        - Middleware should not be declared after routes otherwise it won’t run for those routes
+        - Do not forget next() or else request hangs with no response and client times out
+        - Can only send one response, two will crash with headers error
+        - Do not use open CORS in production → cors() with no options allows all origins so we must restrict it
+        - Secure using HTTPS, rate limiting to prevent overload, sanitizing inputs (using dedicated libraries) to prevent XSS or SQL injection
+    - Quiz
+        - app.use(express.json()) is for parsing incoming JSON request bodies so req.body is available. Without it, req.body would be undefined for POST/PUT requests. It reads raw request body and parses it as JSON before your route handler runs
+        - req.params reads URL segments like /funds/:id, req.query reads key-value pairs after ? like /funds?page=2
+        - Middleware is a function that runs between request and route handler with access to req, res, and next. It can modify request, end response or call next() to pass control forward
+        - Use path.join(_dirname, ‘../data/file.json) instead of hard coding path since it will work with any directory or OS
+        - app.use(cors()) is used to allow Angular frontend on different port to call API without browser blocking it
+        - readFileSync is synchronous (blocks event loop until finished) whereas readFile is aync. Node is single threaded
+        - Calling next() inside middleware passes control to next middleware or route handler in stack
+        - { ...funds[idx], ...req.body } was used to merge existing fund data with incoming changes so fields not in request body are preserved
+        - app.listen(port, callback) starts HTTP server and binds it to the port, calling callback when ready. Until we call this, Express has defined routes but is not actually running. This starts server and makes it accept incoming connections on port
+        - Correct signature for express error handling middleware is (err, req, res, next). Only runs when next(err) is called

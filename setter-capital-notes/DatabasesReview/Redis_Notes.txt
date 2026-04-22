@@ -1,0 +1,84 @@
+What is Redis?
+
+Redis is a NoSQL database that stores all data as key-value pairs. It runs inside working memory (RAM) making it extremely fast, but volatile by default — data is lost on restart unless persistence is configured.
+Redis is not meant to replace your main database. It sits on top of a persistent database (MongoDB, MySQL, PostgreSQL etc.) and acts as a cache layer to speed up repeated reads.
+
+Why Use Redis?
+
+Reads from RAM are orders of magnitude faster than reads from disk
+Reduces load on your main database
+Perfect for data that is read often but changes rarely
+Common use cases: caching API responses, session storage, rate limiting
+
+
+The Caching Pattern
+
+The standard way to use Redis with an Express API:
+javascriptapp.get('/api/funds', async (req, res) => {
+  // 1. Check cache first
+  const cached = await redis.get('funds')
+  if (cached) return res.json(JSON.parse(cached))
+
+  // 2. Cache miss — query the real database
+  const funds = await db.query('SELECT * FROM funds')
+
+  // 3. Store result in Redis with a TTL of 60 seconds
+  await redis.set('funds', JSON.stringify(funds), 'EX', 60)
+
+  // 4. Return the data
+  res.json(funds)
+})
+First request is slow (hits the DB), all subsequent requests until TTL expires are instant (served from cache).
+
+Core Commands -> Basic Key-Value
+SET name Max           # store a value (always stored as string)
+GET name               # retrieve a value → "Max"
+DEL name               # delete a key
+EXISTS name            # returns 1 if exists, 0 if not
+KEYS *                 # list all keys in the database
+FLUSHALL               # clear entire cache — use with caution
+
+TTL (Time To Live) -> Always set an expiry on cached data so it does not go stale.
+TTL name               # check time remaining (-1 = no expiry, -2 = key gone)
+EXPIRE name 10         # set expiry of 10 seconds on existing key
+SETEX name 10 Max      # set key with value AND expiry in one command
+
+Strings -> The default type. Everything stored with SET is a string.
+SET age 28
+GET age                # returns "28" (string, not number)
+
+Lists (ordered, allows duplicates)
+LPUSH friends lewis    # push to left (start) of list
+RPUSH friends john     # push to right (end) of list
+LRANGE friends 0 -1    # get all items (0 = start, -1 = end)
+LPOP friends           # remove and return from left
+RPOP friends           # remove and return from right
+
+Sets (unordered, unique values only)
+SADD hobbies coding    # add to set — duplicates ignored
+SMEMBERS hobbies       # show all members
+SREM hobbies coding    # remove a member
+
+Hashes (like a JavaScript object / map)
+HSET user name Max     # set a field on a hash
+HGET user name         # get one field → "Max"
+HGETALL user           # get all fields and values
+HDEL user name         # delete a field
+HEXISTS user name      # returns 1 if field exists
+
+Connecting in Node.js
+javascriptimport { createClient } from 'redis'
+
+const redis = createClient()
+await redis.connect()
+
+await redis.set('name', 'Max')
+const name = await redis.get('name')  // "Max"
+
+Key Concepts to Know
+
+Volatile by default — data lives in RAM and is lost on restart unless you configure RDB snapshots or AOF (append-only file) persistence
+Always set a TTL — without expiry, stale data stays in cache forever
+Sits on top of a persistent DB — Redis caches, MongoDB/PostgreSQL stores permanently
+Data structures matter — strings for simple values, lists for ordered collections, sets for unique items, hashes for objects
+Not a replacement — use Redis for speed, use your main DB for durability

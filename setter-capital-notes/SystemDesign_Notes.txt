@@ -1,0 +1,276 @@
+Architecture
+
+    Separation of concerns
+    Presentation Layer - Controller
+        Handles HTTP requests
+        Validates incoming data
+        Returns appropriate status codes
+        Must be thin and should delegate work to services. It should NOT contain business logic or directly access database.
+
+    Business Layer - Services
+        Contains your application's business rules
+        Orchestrates operations between repositories
+        Performs calculations, validations, and transformations
+        Should focus purely on business operations and NOT know about HTTP or databases directly
+
+    Data Layer = Repository
+        Handles all database operations
+        Executes queries and saves data
+        Should be simple CRUD operations and should NOT contain busines logic
+
+    Why? To be more maintainable, testabile (can test one layer without the others) and reusable. Also higher clarity.
+
+Async
+    Allows code to be non-blocking. Thread is released to handle other work when await is called
+    Allows for scalability since application can handle more concurrent requests
+    UI applications remain responsive during long operations
+    Resource efficiency - better use of server resources
+    How?
+        When you await an I/O operation (query, request, read, etc.), the method pauses and returns control to caller. When operation completes, the method resumes
+    When?
+        Database operations, HTTP requests, File I/O (read, write)
+    When NOT?
+        CPU bound operations -> Use Task.Run() to run in background
+        Simple operations
+        Over-optimization
+    Patterns 
+        sequential async operations wait for one before starting next (use when operation B depends on result of operation A)
+        parallel async operations start multiple at once and wait for all. Use Task.WhenAll() when operations are independent. Dramatically faster for multiple API calls/database queries
+    Practices
+        async all the way throughout the layer
+        Dont use .Result or .Wait() to prevent deadlocks
+        Always use async Task not async void
+    
+Authentication (who are you? -> Verifying, logging in) and Authorization (what can you do? -> Checking permissions, happens after Authentication)
+
+    Authentication approaches
+    Cookie based (traditional)
+        Server creates session, sends cookie to browser. Browser sends cookie with each request. Good for server-rendered web apps.
+    JWT (modern web apps)
+        Server creates signed token containing user info. CLient stores token. Client sends token in Authorization header. Stateless. Good for APIs, microservices.
+    OAuth 2.0 (third party)
+        Login with Google, github, etc.
+        Delegates auth to 3rd party 
+        Good for avoiding password management, social Login 
+    
+    Authorization approaches
+    Role base (RBAC)
+        Users have roles such as Admin, User, Manager. Permissions granted to roles. Simple and common
+    Claims based
+        More flexible than roles. User has claims (key-value pairs such as Age, Department, etc.). Can check specific claims for Authorization
+    Policy based
+        Define complex authorization rules. Combine multiple requirements. Most flexible.
+    
+    Happens at controller level. At action level -> Different permissions for different endpoints. In business logic -> Check user permissions before performing operations.
+
+SOLID
+    Single responsiblity principle - Each class should only have one reason to change. Easier to understand and test. Changes in one area don't break the rest 
+    Open/Closed principle - Open for extension, closed for modification. Add new functionality without changing code. Reduces risk of breaking existing functionality when adding features
+    Liskov principle - Derived classes must be substitutable for their base classes. Given a base class, any derived class should be able to replace it without breaking program. Ensures inheritence is used correctly and polymorphism as well.
+    Interface principle - Better to have small specific interfaces than one large, general interface. Classes only implement what they need, avoiding dummy implementation
+    Dependency inversion principle - Depend on abstractions, not concretions. High level modules shouldn't depend on low-level modules. Both should depend on abstractions
+
+System Design
+
+    Sizes
+        Bits -> 0 or 1
+        Byte = 8 Bits
+    Storage
+        Main
+            HDD (non volatile)
+            SSD is much faster
+        RAM primary active data holder
+            DS, Variables
+            Volatile memory
+        Cache
+            L1 (closest)
+            L2
+            More frequently used memory
+    CPU
+        Code compiled into machine code, then CPU executes
+
+    Pipeline
+        Automating deployment -> Continuous integration, continuous deployment
+        Needs load balancer, then connected to Storage
+        Logging and monitoring to detect failures -> Alert services
+        Don't debug in production but rather in staging (copy of production)
+    
+    Pillars
+        Good design -> Scalability, Maintainability, Efficiency, Reliability
+        Moving Data
+            Between DB, Devs, Users
+        Storing Data
+            Access patterns, indexing strategies, backup solutions
+        Transforming Data
+            Json, Sql -> User readable
+        CAP theorem
+            Consistency -> Data remains consistent across all users
+            Availability -> System is reliable and open to take requests
+                Measured in percentage (99% uptime v downtime)
+                SLO - Service level objectives (300ms, 99%)
+                SLA - Service level agreements (99.99% agreement)
+                Reliability, Fault tolerance, redundancy
+            Partition tolerance -> Ability to continue working even if parts are not working
+            Can only get 2 of the 3
+        Speed 
+                Throughput -> How much our data can handle over a certain period of time (requests per second, queries per second)
+                Latency -> How long it takes to handle a single request
+        Network
+            IP -> Unique adress (32 bit -> now becoming 128 bit)
+            Computers communicate by sending over server with IP header
+            IP Layer -> Internet protocol
+            Application layer -> HTTP data
+            Transport layer -> TCP (Transmission control protocol): Reliability, holds information about port numbers
+                3 way handshake -> SYN, SYN ACK, ACK
+                UDP (user datagram) is less reliable but faster -> Video calls where data loss is accetable but speed loss is not
+            DNS (Domain Name System) -> Human readable that maps to IP address
+            Infrastructure -> 
+                Public, private IP addresses
+                tatic or dynamic (residential) IP addresses
+                LAN (local area network)
+                PORTS (80 HTTP, 443 HTTPS, etc)
+            HTTP -> Hyper Text Transfer Protocol
+                Contains URL, Method, Code, Address, etc.
+                Return codes
+                    2xx is success codes
+                    3xx is redirection codes
+                    4xx is client error codes
+                    5xx is server error codes
+                Methods
+                    GET -> Retrieve information
+                    POST -> Create information
+                    PATCH -> Update information
+                    DELTE -> Delete information
+            Websockets
+                Two way communicationg between server and client
+                Constant updates
+                Live chats, stock markets, sports feeds, etc.
+            SMTP (Email transmission)
+                IMAP -> Retrieve emails from server
+                POP3 -> Download emails from server
+            File transfer protocols -> 
+                FTP: tranferring files over thje internet
+                SSH: Command line login and file transfer
+
+            WebRTC: Browser to browser applications for voice valling, video chat
+            MQTT: Lightweight message protocol
+            AMQP: Protocol for message oriented Middleware
+
+        API
+            Application Programming interface
+            CRUD -> Create, Read, Update, Delete
+            REST -> Representational state transfer 
+                Stateless
+                Standard HTTP methods
+                Over fetching and under fetching
+                JSON for data exchange
+            Graph QL
+                Avoids under and over fetching
+                Strongly typed schema based queries
+                Only POST requests
+                Responds with 200 OK
+            Limit, Offeset, Start date, End date -> Allows for specific informatino
+            Idempotent -> Calling same method always returns same data
+            Set Rate limits to limit number of reqeusts by users
+            CORS -> Cross origin resource sharing so we can control which domains access our API 
+            Caching improves efficiency by storing copy of data in temporary storage
+                Browser caching -> Users system 
+                    Cache hit and Cache miss -> Cache ratio is hits/misses+hits
+                Server caching -> Server side stored on separate cache server or actual server. Checks here first before querying database
+                    Write through cache writes to cache server and database at same time -> May be slower
+                    Write back writes to cache first then from cache to database -> Might lose data
+                Database caching
+                    Can be within database itself or external layer
+                    Query goes to cache first then database if not found
+                CDNs
+                    Network of servers around the world
+                    Take from origin server which sends to nearest CDN server to user. If it has in cache, it sends to user, otherwise fetches from server and caches it (Pull based)
+                    - Pull based -> Pulls from server then places in cache
+                    - Push based -> Upload to server then push to CDN servers
+                    Reduced latency, high Availability, improved security
+                Eviction policies
+                    Least recently used (LRU)
+                    First In First Out (FIFO)
+                    Least frequently used (LFU)
+        Proxy server
+                Intermediary between client requesting a resource and the server providing that resource
+                Can provide caching resources, load balancing, security, etc.
+                Types
+                    Forward proxy (Client -> F Proxy -> Internet server) -> In front of clients and used to send requests to other servers. Internal networks, hides client
+                        Used to cache frequently used websties, anonymize user traffic, manage multiple accounts
+                    Reverse proxy (Client -> R Proxy -> One of many servers) -> In front of one or more websites intercepting requests form internet. Hides backend servers
+                        Used for load balancing, SSL termination, caching, filtering
+                    Transparent 
+                        Idea is that you know its there 
+                    Anonymous
+                        Idea is that it hides your IP
+                    Distorting
+                        Lies abut your IP
+                    Elite
+                        Pretends it doesn't exist 
+                    Open
+                        Anyone can use it 
+            Load balancer (Reverse proxy)
+                Spreading requests to reduce load on servers -> Prevents bottleneck, outages
+                Round Robin -> Each server gets request in order and works best when servers are identical
+                Least connections -> Send request to least busy server, works bset for long-lived requests
+                Least response time -> First server to repond gets request, works best for latency-sensitive systems 
+                IP hashing -> Same client goes to same server, used for session persistence
+                Weighted variants -> Stronger servers get more traffic (most used in real world)
+                Geographic routing -> Closest server wins
+                Consistent hashing -> Minimizes reshuffling when nodes change. Critical for distributed systems
+                Health checks, redundancy, DNS failover since if LB fails, everything fails
+        Databases
+            Relational -> Structured, ACID (Atomicity, Consistency, Isolation, Durability)
+                Examples are MySQL, PostgreSQL
+                Used for transactions, financial data, complex joins
+            NoSQL -> Flexible, horizontally scalable (Split data across servers, range based, hash based, geo based, etc.), weaker consistency guarantees
+                Examples are MongoDB, Redis
+                Used for massive scale, fast iteration, unstructured data
+            Vertical scaling
+                Bigger machine
+                Simpler but limited
+                Single point of failure
+            Horizontal scaling
+                Sharding
+                    Split across servers
+                    Range based, hash based, geo based
+                Replication
+                    Duplicate data for availability
+                    Master slave -> Read scaling
+                    Master master -> Write scaling, harder
+
+Security
+
+    Least privilege -> Only expose what client needs. If a user requests fund data, do not return internal IDs, admin flags, or fields they have no business seeing
+    Secrets in .env -> Know why, not just what. Once a secret is in git history, it is permanently exposed even if deleted in later commit so .env goes in .gitignore and its values are accessed via process.env.KEY
+    Input validation -> SQL injection (malicious SQL statements are inserted into input fields to manipulate backend databases. Attack that allows hackers to bypass Authentication, view sensitive data and modify entries) prevention
+        if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' })
+    CORS -> Cross origin resource sharing to allow frontend and backend to talk to each other. Restrict to prevent bad access -> app.use(cors({ origin: 'https://yourfrontend.com' }))
+    HTTPS -> Encrypts data between client and server. Without it, anyone on network can read your API responses including tokens and passwords
+    Bcrypt -> Hashed passwords instead of encrypted. Hashed on way, so when user logs in, hash their input and compare against stored hash
+    Rate limiting -> Limit how many requests a client can make in a timeframe. Prevents abuse, brute force attacks, accidental overload.
+        In node ->
+            import rateLimit from 'express-rate-limit'
+            const limiter = rateLimit({
+                windowMs: 15 * 60 * 1000, // 15 minutes
+                max: 100                  // 100 requests per window
+            })
+            app.use('/api', limiter)
+
+Background Jobs
+
+    Ex: If user requests a large report that takes 30 seconds to generate, you do not make them wait for HTTP response. Instead add job to a queue and return a job ID immediately. Worker picks it up and processes in background. User polls for result or gets notified when done
+    Queue pattern
+        Producer -> API route that adds jobs
+        Queue -> List of pending jobs
+        Worker -> Process that picks up and runs jobs one at a time
+    Cron Scheduler
+        Runs on time interval regardless of user requests
+        Ex: Generate daily fund performance report at midnight
+        In node -> 
+            import cron from 'node-cron'
+            cron.schedule('0 0 * * *', () => {
+                generateDailyReport()
+            })
+    BullMQ -> Built on top of Redis. Jobs stored in Redis queues. Supports retries, delays, priority, concurrency

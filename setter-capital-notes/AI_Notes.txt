@@ -1,0 +1,183 @@
+Overview
+
+- Prompts are set of instructions given to AI
+- It is the skill of designing and refining instructions for an AI
+- Quality in - Quality out
+
+Purpose
+
+- Control output quality
+- Reduce hallucinations
+- Improve reasoning
+- Ensure structured responses
+- Increase consistency
+- Think of it as → In Java, controlling program output with method design. The output can only go as far you tell it in the method design.
+
+Components
+
+- Role
+    - Tells AI who it should be. Assigning a persona is a way to control tone and style.
+    - Ex: “You are a backend engineer”
+    - LLMs condition strongly on context and tone.
+- Task
+    - Core instruction. Use clear, direct and unambiguous communication
+    - Help reduce hallucination
+- Context
+    - Background information the AI need
+    - Ex: Give tech stack, audience level, time limit. → “Use Java only. No external libraries.”
+- Format
+    - Specifies how you want the answer presented
+    - Specify output length so number of tokens don’t exceed the necessary amount. This would cause slowdowns and higher costs
+
+Temperature
+
+- Controls degree of randomness in token selection. Lower temperatures are good for prompts that expect more deterministic response while higher is more diverse and unexpected. Temperature of 0 is greedy → Highest probability token always chosen. Temperature higher → Random output until all tokens have equal probability.
+
+Top-K
+
+- Sampling that selects the top K most likely tokens from model’s predicted distribution. Higher top-k, more creative and varied. A top-k of 1 → Greedy decoding
+
+Top-P
+
+- Sampling that selects the top tokens whose cumulative probability does not exceed a certain value (P). Values for P range from 0 (greedy decoding), to 1 (all tokens in LLM vocab)
+
+How they connect →
+
+- Temp at 0 → Top-K and Top-P become irrelevant
+- Top-K at 1 → Temperature and Top-P become irrelevant
+- Top-P at 0 → Temperature and Top-K become irrelevant
+- General is Temperature of 0.2, Top-P of 0.95, Top-K of 30 for coherent results that are somewhat creative
+
+Zero Shot
+
+- Simplest type of prompt → Only provides description of task and some text for LLM to start with. No examples.
+
+Few Shot Prompting
+
+- Giving examples in the prompt
+- LLMs are pattern completion systems. Showing format primes behavior.
+- Use for classification, data transformation, structured output, formatting tasks
+
+System Prompting
+
+- Sets overall context and purpose for the language model. Defines the ‘big picture’ of what the model should be doing, like translating a language, classifying a review, etc.
+
+Contextual Prompting
+
+- Provides specific details or background information relevant to the current conversation or task. Helps model to understand the nuance of what is being asked. Highly specific to current task or input, which is dynamic.
+
+Role Prompting
+
+- Assigns a specific character or identity for the language model to adopt. Helps model generate responses that are consistent with assigned role and its associated knowledge and behaviour.
+
+Step Back Prompting
+
+- First considering a general question related to the specific task, then feeding the answer to that general question into a subsequent prompt for the specific task. Allows LLM to step-back and activate relevant background knowledge before attempting to solve the specific pattern.
+
+Chain of Thought Prompting
+
+- Encourages step by step reasoning
+- Improves Math reasoning, logical reasoning, multi step analysis and debugging
+- Easier to find missteps or hallucinations
+- Putting answer after reasoning is required
+- Set temperature to 0 (Greedy decoding)
+- Tree of Thoughts
+    - Generalizes concept of CoT prompting because it allows LLMs to explore multiple different reasoning paths simultaneously rather than just following a single linear chain of thought.
+
+ReAct
+
+- Reason and Act → Paradigm for enabling LLMs to solve complex tasks using natural language reasoning combined with external tools (search, code, interpreter, etc.) allowing the LLM to perform certain actions such as interacting with external APIs to retrieve information
+
+Refining Prompts
+
+- Iterative prompting
+- Follow the loop of Try → Evaluate → Refine
+- Treat it like debugging. Try a solution first, find the bugs, fix them one by one
+
+Advanced Prompting Strategies
+
+- Self Consistency → Ask model to reason multiple times and compare outputs
+- Decomposition → Break a big task into smaller prompts (ie: Don’t just tell it to build a full app)
+    - Go step by step → Define requirements first, then define DB schema, then define scaling strategy, then generate API design
+- Tool automated prompting → Use code interpreter, file uploads, web browsing
+
+Tools
+
+- Useful for uploading PDFs, analyze resumes, parse contracts, summarize searches
+- Visually it can debug UI screenshots, analyze diagrams, extract text from images
+
+Use Instructions (explicit, positive, guiding model what to produce) over Constraints (limitations or boundaries on the response)
+
+Prompt Templates
+
+- Reusable prompt structure where variables are filled dynamically.
+
+RAG
+
+- Retrieval Augmented Generation → Instead of relying on model knowledge, you inject external data into the prompt.
+- Workflow is → User Question → Search DB/Vector store → Retrieve relevant documents → Insert them into prompt context → LLM generates answer
+
+Limitations
+
+- Hallucination → Generate incorrect information.
+    - Mitigate by asking for sources, providing constraints, use smaller scoped prompts
+- Knowledge cutoff → May not know recent information unless browsing is enabled
+- Context window limits → Too long conversations can degrade accuracy
+- No true understanding → Predicts tokens, doesn’t understand like a human
+
+Bias
+
+- LLMs are trained on internet-scale data
+- Introduces cultural bias, political bias, western-centric bias, language bias
+- Important in hiring tools, academic analysis, legal work, policy drafting
+
+Data Privacy
+
+- Important considerations when using LLMs:
+    - Sensitive data may be stored or logged
+    - Avoid uploading:
+        - personal information
+        - confidential documents
+        - proprietary data
+- Organizations often use:
+    - private models
+    - secure environments
+    - data redaction
+
+RAG
+
+- Retrieval Augmented Generation is an AI architecture that combined information retrieval with generative AI. Instead of relying only on what a language model learned during training, the system searches external knowledge sources, retrieves relevant documents, feeds them to an AI model and the model generates an answer using that retrieved context
+- Flow is: User question → Retrieve relevant documents → Give documents to LLM → LLM generates answer using those documents
+- Why its used
+    - Prevent hallucinations because it comes from real retrieved documents
+    - Prevents outdated knowledge since system retrieves data from databases or documents
+    - Allows for enterprise data access that is otherwise not public and internal. For example, financial reports, product documentation, internal documents, etc.
+- 5 steps
+    - User query → “What are requirements for opening a business account”
+    - Convert query to Embedding → “Business account requirements” vector representation
+    - Vector search → Search using Pinecone, Weaviate, FAISS, for most relevant documents. System finds documents with similar vectors
+    - Retrieve context → Most relevant documents are retrieved
+    - Generate answer → Documents sent to LLM along with question
+- Where
+    - Used in Customer support chatbots by using company documentation
+    - Financial services knowledge assistants. Banks use them to answer internal policy questions
+    - Legal document search
+
+How I used AI
+
+- I recently built a Test Health command line interface tool that is used for analyzing automated test results and I used AI to help me throughout the development process.
+- When i started, I had the requirements but needed to design the architecture. I used AI to discuss design patterns such as using a monolithic approach or separate concerns into different packages. The AI help me think through these options and gave me pros and cons for different approaches. This conversation lasted less than 30 minutes as opposed to hours of reading documentation
+- For implementation, AI was useful for Java specific questions. For example, when parsing JSON with Jackson, I needed to handle type erasure for a List<TestResult>. The AI explained why I needed TypeReference with an anonymous class which would’ve taken me much longer on my own. It is also helped in the Jenkins portion of the project when it came to understanding timezone handling in cron expressions.
+- When I hit issues, like Git line ending warnings or understanding why my flaky test detection needed two separate maps, AI acted as a pair programmer to help me understand why one approach worked better than the other.
+- AI helped with documentation and polish, by helping me structure my README file, writing clear comments on tricky parts such as  ‘set -euo pipefall’ in bash scripts and also reviewing my Jenkins DSL to ensure it met requirements
+- AI helped a lot when it came to analyzing different approaches, the speed gain, understanding tradeoffs and making informed decisions.
+- AI was more of a technical advisor that I used when I ran into blockers. The limitations came when suggesting overly complex solutions like adding a time-series database and dashboards. While it would work, it was not necessary for the project given the scale.
+
+Verifying AI product
+
+- Central to how I use AI as a tool, especially relevant for a QA role.
+- I begin with an intermediate code review and understanding. I would never accept AI suggestions without first understanding them. If I struggle to understand them, I’d read up on documentation or prompt the AI further to understand what was being sent. If I can’t understand why code behaves a certain way, I can’t properly test it → Why the empty braces at the end? What happens if I remove them? Whats the alternative approach?
+- Next, I systematically tested every AI suggestion with real scenarios. For flaky test detection logic, I created test cases and tested valid scenarios, from positive to negative ones. I created edge cases such as empty JSON files, malformed JSON files, missing required fields, null, etc.
+- I analyzed the behaviour of AI suggested patterns. For example, AI recommended a LinkedHashMap over a regular HashMap to preserve insertion order. I tested to see if it actually mattered for the tool and it did, so I kept that AI suggestion
+- Then I completed end to end testing by building with maven, running with sample json files and testing various file paths. I checked exit codes to ensure the project was working and validated Jenkins DSL syntax
+- Finally, I would do a full code review like I would review another Junior Dev’s code. I focused on understanding if its readable, maintainable, performance implications, error handling comprehensiveness and if there are hidden assumptions

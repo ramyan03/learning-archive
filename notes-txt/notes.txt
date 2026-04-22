@@ -1,0 +1,1311 @@
+Testing fundamentals
+
+1. Test types
+    Unit tests -> Bottom of pyramid (most common - 70%, cheap, fast)
+        Test individual functions/methods in isolation
+        Fastest since it takes just milliseconds
+        Small scope (Usually single function/class)
+        Written by developer
+        Use in every function that has logic
+
+        Code example
+            @Test
+            public void testCalculateTotal() {
+                Calculator calc = new Calculator();
+                assertEquals(10.0, calc.calculateTotal(5.0, 5.0), 0.01);
+            }
+    Component tests
+        Testing specific components such as API calls
+        Mock out DB, or other components
+        Test for bad requests or if backend is down
+
+    Integration tests -> Middle of pyramid (second most common - 20%, moderate number)
+        Tests how multiple components work together.
+        Medium speed (seconds)
+        Bigger scope since it uses multiple classes/modules/services
+        Written by developers or SDETS
+        Example can be testing if your API can save data to database
+
+        Code example
+        @Test
+        public void testUserRegistration() {
+            UserService service = new UserService();
+            DatabaseConnection db = new DatabaseConnection();
+            
+            User user = service.registerUser("john@email.com", "password123");
+            User retrieved = db.getUser(user.getId());
+            
+            assertEquals("john@email.com", retrieved.getEmail());
+        }
+
+    End to End tests -> Top of pyramid (most uncommon - 10%, slow, expensive)
+        Test complete user workflows from UI to backend
+        Slowest time at minutes
+        Scope is largest at entire application
+        Written by SDET/QA
+        Used to test critical user journeys
+
+        Example flow -> User logs in -> Searches for product -> Adds to cart -> Checks out
+        @Test
+        public void testCompleteCheckoutFlow() {
+            // 1. Login
+            loginPage.login("user@test.com", "password");
+            
+            // 2. Search product
+            homePage.searchFor("laptop");
+            
+            // 3. Add to cart
+            productPage.addToCart();
+            
+            // 4. Checkout
+            cartPage.proceedToCheckout();
+            checkoutPage.completePayment();
+            
+            // 5. Verify
+            assertTrue(orderConfirmationPage.isDisplayed());
+        }
+
+        POM (Page Object Model)
+            Design pattern for UI test that creates object repository for web elements, reducing code duplication and improving maintainability
+            Structure:
+                Each page is 1 class
+                Web elements are class fields
+                Page actions are methods
+                Tests use page objects, not raw selectors
+            Benefits
+                Reusable page actions
+                Single place to update selectors when UI changes
+                More readable tests
+                Easier maintanence
+
+    Regression Testing
+        Re running tests to ensure new changes don't break existing functionality
+        After every code change and before deployment
+        Usually automated suite of unit + integration + E2E tests
+        Example scenario where we add a new "Forgot Password" feature
+            Run regression tests to ensure login still works
+            Make sure user page still loads
+            Ensure checkout flow isn't broken
+    
+    Smoke tests (Sanity tests)
+        Quick tests to verify critical functionality works
+        Takes 1-5 minutes
+        Purpose is to answer the question -> "Is the build stable enough to test further"
+
+        Example -> Can I launch the app? Can you login? Can you access main features?
+        @Test
+        public void smokeTest() {
+            assertTrue(app.canLaunch());
+            assertTrue(loginPage.isAccessible());
+            assertTrue(homePage.canLoadData());
+        }
+
+White Box v Black Box Testing
+
+    White Box -> Testing with knowledge of internal code structure
+        Tester knows source code, internal logic, database schema, architecture
+        Techniques -> Code coverage analysis (how much (%) of the code that the test cases execute),
+            path testing (tests different execution paths through code),
+            statement coverage (tests whether each line of code executes),
+            branch coverage (ensures both true/false paths run)
+        Used in unit testing, code reviews, security testing
+        Done by devs, SDET
+        Tests internal logic
+        Uses debuggers, coverage tools
+
+        // You know this function exists and can test it directly
+        public int divide(int a, int b) {
+            if (b == 0) {
+                throw new ArithmeticException("Division by zero");
+            }
+            return a / b;
+        }
+
+        @Test
+        public void testDivideByZero() {
+            assertThrows(ArithmeticException.class, () -> {
+                divide(10, 0);  // Testing internal logic
+            });
+        }
+    
+    Black Box -> Testing without knowledge of internal logic
+        Tester knows what system should do (requirements), the inputs and expected outputs, and user perspective
+        Techniques -> Equivalence partitioning (Group inputs into categories assumed to behave similarly
+            Ex -> With range 1-120, test one valid value, one too high, and one too low), boundary value analysis (Test edge cases),
+            decision table testing (Test multiple conditions interaction with each other -> Say A and B are both booleans, then test TruexTrue, TruexFalse, etc.)
+            or modified condition decision coverage
+        Done by QA, End users.
+        Focus is on functionality
+        UI tests for example
+
+        Example
+        Testing a login form (don't know the code):
+
+        Test 1: Valid username + valid password → Should login
+        Test 2: Invalid username → Should show error
+        Test 3: Empty password → Should show error
+        Test 4: SQL injection attempt → Should be blocked
+        Test 5: 100 character password → Should accept or reject gracefully
+
+    Blue-Green Testing -> Two identical production environments where one is new and one is old
+        Blue is live (serving traffic)
+        Want to deploy new version to Green
+        Test Green thoroughly
+        Switch traffic
+        Keep Blue as rollback option
+
+Horizontal Testing
+    End to End -> Testing entire system flow
+    Ex: User registration, email verification, login, profile update
+    Covers all layers
+
+Vertifical Testing
+    Deep testing within one layer
+    Ex: Thoroughly testing all API endpoints
+    Covers single layer like just UI, just DB, or just business logic.
+
+Test Design Principles
+
+    FIRST
+        F -> Fast: Tests should run quickly to get fast feedback. Avoid thread.sleep()
+        I -> Independent: Tests should not depend on each other. Avoid tests that use same variables and depend on the other finishing
+        R -> Repeatable: Same input should always produce same output. Avoid real date testing (ie: Don't test isMonday() on Tuesday)
+        S -> Self Validating: Tests should automatically pass or fail with no manual verification. Avoid manual checks like with System.out.println()
+        T -> Thorough (timely): Tests should cover edge cases, boundary conditions, and error cases
+    Additional
+        Isolated: Mock external dependencies like DB, API, etc.
+        Maintanable: Easy to read, update, and understand
+
+BDD Testing Framework (Cucumber): Behaviour Driven Development -> Writing tests in natural language that non-technical people can understand in a Given-When-Then format
+
+    Cucumber is framework that lets you write in natural language
+        Write feature files (.feature) in plain english
+        Step definitions in Java that execute automation
+        Makes requirements executable by connecting readable scenarios ("Given/When/Then") to automated test code, improving collaboration between QA, dev, product
+        Typically run it through JUnit runner or TestNG runner
+        Cucumber => Scenario definitions + binding
+        JUnit/TestNG => Execution engine/lifecycle integration
+
+    Example in gherkin:
+
+        Feature: User Login
+            As a user
+            I want to log in to my account
+            So that I can access my dashboard
+
+            Scenario: Successful login with valid credentials
+                Given the user is on the login page
+                When the user enters username "john@test.com"
+                And the user enters password "password123"
+                And the user clicks the login button
+                Then the user should see the dashboard
+                And the user should see a welcome message "Welcome, John"
+
+            Scenario: Failed login with invalid password
+                Given the user is on the login page
+                When the user enters username "john@test.com"
+                And the user enters password "wrongpassword"
+                And the user clicks the login button
+                Then the user should see an error message "Invalid credentials"
+                And the user should remain on the login page
+
+        Syntax -> Feature, Scenario, Given (setup context), When (action), Then (assert outcoming), And/But (chaining)
+
+    In Java, this looks like
+
+        import io.cucumber.java.en.*;
+        public class LoginSteps {
+            private LoginPage loginPage;
+            private DashboardPage dashboardPage;
+            
+            @Given("the user is on the login page")
+            public void userIsOnLoginPage() {
+                loginPage = new LoginPage();
+                loginPage.navigate();
+            }
+            
+            @When("the user enters username {string}")
+            public void userEntersUsername(String username) {
+                loginPage.enterUsername(username);
+            }
+            
+            @When("the user enters password {string}")
+            public void userEntersPassword(String password) {
+                loginPage.enterPassword(password);
+            }
+            
+            @When("the user clicks the login button")
+            public void userClicksLoginButton() {
+                dashboardPage = loginPage.clickLogin();
+            }
+            
+            @Then("the user should see the dashboard")
+            public void userShouldSeeDashboard() {
+                assertTrue(dashboardPage.isDisplayed());
+            }
+            
+            @Then("the user should see a welcome message {string}")
+            public void userShouldSeeWelcomeMessage(String expectedMessage) {
+                assertEquals(expectedMessage, dashboardPage.getWelcomeMessage());
+            }
+        }
+
+    Benefits of BDD
+        Readable by non tech stakeholders (such as product managers or business analysts)
+        Living documentation (tests describe what system does)
+        Collaboration between developers, QA, and business
+        Focus on behaviour not implementation
+        Shared language for specs + tests
+        Improves traceability between requirements and automated coverage
+
+    Problems can arise if:
+        Scenarios are too low-level instead of behaviour
+        Duplicated steps create a maintanence mess
+        People use it as testing format instead of collaboration tool
+    
+    Structure Cucumber
+        Keep scenarios high level, reuse steps carefully, use page objects/services underneath, avoid brittle UI steps and centralize setup/teardown using hooks
+    
+    Hooks
+        Setup/Teardown logic that runs before/after scenarios (@Before, @After)
+
+JUnit Examples
+
+    @Before // Runs before each test
+    public void setup() {
+        calc = new Calculator();
+    }
+    
+    @Test
+    public void testAddition() {
+        assertEquals(5, calc.add(2, 3));
+    }
+    
+    @Test(expected = ArithmeticException.class) // Expected exception handling
+    public void testDivideByZero() {
+        calc.divide(10, 0);
+    }
+    
+    @Test(timeout = 1000)  // Fails if takes > 1 second
+    public void testPerformance() {
+        calc.complexCalculation();
+    }
+    
+    @Ignore("Not implemented yet")
+    @Test
+    public void testFutureFeature() {
+        // skipped
+    }
+    
+    @After
+    public void teardown() {
+        // Runs after each test
+        calc = null;
+    }
+    
+    @AfterClass
+    public static void teardownClass() {
+        // Runs once after all tests
+        System.out.println("Test suite completed");
+    }
+
+    Full cycle
+        @BeforeAll (Static method that runs once)
+        @BeforeEach (Before specific method)
+        @Test (Testing specific method)
+        @AfterEach (After specific method)
+        @AfterAll (Static method, runs once)
+    
+    Parameterized
+
+        // Test with multiple values
+        @ParameterizedTest
+        @ValueSource(ints = {1, 2, 3, 4, 5})
+        public void testIsPositive(int number) {
+            assertTrue(number > 0);
+        }
+        
+        // Test with string values
+        @ParameterizedTest
+        @ValueSource(strings = {"hello", "world", "test"})
+        public void testStringLength(String word) {
+            assertTrue(word.length() > 0);
+        }
+        
+        // CSV source for multiple parameters
+        @ParameterizedTest
+        @CsvSource({
+            "1, 2, 3",
+            "10, 5, 15",
+            "-1, 1, 0"
+        })
+        public void testAddition(int a, int b, int expected) {
+            assertEquals(expected, calc.add(a, b));
+        }
+        
+        // Method source for complex objects
+        @ParameterizedTest
+        @MethodSource("provideTestData")
+        public void testWithMethodSource(int a, int b, int expected) {
+            assertEquals(expected, calc.add(a, b));
+        }
+        
+        static Stream<Arguments> provideTestData() {
+            return Stream.of(
+                Arguments.of(1, 2, 3),
+                Arguments.of(10, 5, 15),
+                Arguments.of(-1, 1, 0)
+            );
+        }
+
+    Assertions
+        assertEquals(expected, actual)
+        assertTrue(condition)
+        assertFalse(condition)
+        assertNull(object)
+        assertNotNull(object)
+        assertSame(object1,object2)
+        assertArrayEquals(expectedArray, actualArray)
+
+    TestNG
+        Overview
+            Java framework used to write and run automated tests. Similar to JUnit but more popular in automation because of built-in features
+            TestNG gives granular control over setup/teardown at method, class, and suite levels, which is useful when tests share expensive resources like browsers or test environments.
+            TestNG often uses a suite file testing.xml to control what tests run, groups included/excluded, parallel settings, listeners/reporting
+        
+        Use if:
+            Complex test suite with dependencies
+            Need parallel execution easily
+            Need to group tests (smoke, regression, sanity)
+            Data driven testing with complex data
+            Large enterprise projects
+            Need fine grained control over test execution
+
+        Key features
+            Test dependencies -> dependsOnMethods
+                For instance, if we have testLogin(), we can then write @Test(priority = 2, dependsOnMethods = {"testLogin"}) in our second test.
+                However, can make suites brittle. Prefer independent.
+
+            Execution order -> priority parameter
+                We can write @Test(priority=1)
+
+            Has parallel execution
+                Parallelism speeds up CI but requires thread-safe (invoked concurrently) test design and isolated test data, otherwise flakiness increases.
+                
+                <suite name="Suite" parallel="methods" thread-count="5">
+                    <!-- All test methods run in parallel with 5 threads -->
+                </suite>
+
+                <!-- Or parallel by class -->
+                <suite name="Suite" parallel="classes" thread-count="3">
+                </suite>
+            
+            Data providers -> @DataProvider
+                Run same test with many inputs. Good for boundary testing/input variations. Keeps code DRY (Don't Repeat Yourself)
+                @DataProvider
+                public Object[][] users() {
+                return new Object[][] {{"alice"}, {"bob"}};
+                }
+
+                @Test(dataProvider = "users")
+                public void userCanLogin(String username) {}
+
+
+            Can group tests -> groups parameter
+                Can run subsets of tests without changing code
+
+                @Test(groups = {"smoke"})
+                public void loginWorks() { }
+
+                Then only run smoke tests via suite coding
+                Matters because full regression nightly, fast "smoke" on PR
+
+            XML config -> testing.xml
+
+        Potential questions
+            TestNG is preferred over JUnit in automation since it supports groups, dependencies, data providers, and parallel execution naturally, which helps manage large test suites in CI.
+            To reduce flakiness, make tests more independent, isolate test data, avoid shared state, add stable waits/timeouts for UI tests and ensure parallel execution doesn't cause resource contention
+            Use groups to run small tests like smoke tests on every pull request and larger regression suites nightly.
+
+        Example
+
+            // Runs ONCE before entire test suite
+            @BeforeSuite
+            public void setupSuite() {
+                System.out.println("Starting entire test suite");
+            }
+            
+            // Runs ONCE before <test> tag in testng.xml
+            @BeforeTest
+            public void setupTest() {
+                System.out.println("Starting test");
+            }
+            
+            // Runs ONCE before this test class
+            @BeforeClass
+            public void setupClass() {
+                System.out.println("Starting Calculator tests");
+            }
+            
+            // Runs BEFORE EACH test method
+            @BeforeMethod
+            public void setup() {
+                calc = new Calculator();
+            }
+            
+            // Basic test
+            @Test
+            public void testAddition() {
+                int result = calc.add(2, 3);
+                assertEquals(result, 5);  // Note: expected is SECOND in TestNG
+            }
+            
+            // Test with priority (lower number runs first)
+            @Test(priority = 1)
+            public void testFirst() {
+                System.out.println("This runs first");
+            }
+            
+            @Test(priority = 2)
+            public void testSecond() {
+                System.out.println("This runs second");
+            }
+            
+            // Test that depends on another test
+            @Test(priority = 1)
+            public void testLogin() {
+                assertTrue(user.login());
+            }
+            
+            @Test(priority = 2, dependsOnMethods = {"testLogin"})
+            public void testDashboard() {
+                // Only runs if testLogin passes
+                assertTrue(dashboard.isDisplayed());
+            }
+            
+            // Test expecting exception
+            @Test(expectedExceptions = ArithmeticException.class)
+            public void testDivideByZero() {
+                calc.divide(10, 0);
+            }
+            
+            // Test with timeout
+            @Test(timeOut = 1000)  // milliseconds
+            public void testPerformance() {
+                calc.complexCalculation();
+            }
+            
+            // Disabled test
+            @Test(enabled = false)
+            public void testSkipped() {
+                // This test won't run
+            }
+            
+            // Test groups
+            @Test(groups = {"smoke", "regression"})
+            public void testCriticalFeature() {
+                // Can run only smoke tests or only regression tests
+            }
+            
+            // Runs AFTER EACH test method
+            @AfterMethod
+            public void teardown() {
+                calc = null;
+            }
+            
+            // Runs ONCE after this test class
+            @AfterClass
+            public void teardownClass() {
+                System.out.println("Finished Calculator tests");
+            }
+            
+            // Runs ONCE after <test> tag in testng.xml
+            @AfterTest
+            public void teardownTest() {
+                System.out.println("Finished test");
+            }
+            
+            // Runs ONCE after entire test suite
+            @AfterSuite
+            public void teardownSuite() {
+                System.out.println("Finished entire test suite");
+            }
+
+        Comparisons between JUnit and TestNG
+            Test method is both @Test
+            Before each test
+                JUnit -> @BeforeEach
+                TestNG -> @BeforeMethod
+            After each test
+                JUnit -> @AfterEach
+                TestNG -> @AfterMethod
+            Before all tests
+                JUnit -> @BeforeAll
+                TestNG -> @BeforeClass
+            After all tests
+                JUnit -> @AfterAll
+                TestNG -> @AfterClass
+            Suite
+                TestNG -> @BeforeSuite and @AfterSuite
+            Skip test
+                JUnit -> @Disabled
+                TestNG -> @Test(enabled=false)
+            Timeout
+                JUnit -> @Timeout()
+                TestNG -> @Test(timeOut=1000)
+            Expected exception
+                JUnit -> assertThrows()
+                TestNG -> @Test(expectedExceptions=...)
+
+Microservice Architecture
+
+    Monolith
+        Single Large Application example
+            User management
+            Order processing
+            Payment
+            Inventory
+            Shipping
+        All in one codebase
+    Modern
+        User service -> DB1
+        Order service -> DB2
+        Payment service -> DB3
+
+        Each service has independent codebase, own database, and can be deployed separately
+        Each service communicates via API
+    
+    Key characteristics
+        1. Independence
+            Each service can be deployed, developed, and scaled independent of other services
+            Different teams can own different services
+            Can use different programming languages
+        2. Communication
+            Services talk via REST APIs or message queues
+            Example
+                // User Service making API call to Order Service
+                public List<Order> getUserOrders(int userId) {
+                    String url = "http://order-service/api/orders?userId=" + userId;
+                    return restTemplate.getForObject(url, List.class);
+                }
+        3. Database per Service
+            Each Microservice has its own database
+            No shared database (loose coupling)
+    
+    Benefits: Scalable, flexible, resilience, faster deployment
+    Challenges: Complexity, Network latency, testing, data consistency is harder
+
+    Testing
+        Unit Tests (per service) -> Test business logic in isolation. Mock external service calls
+        Contract Tests -> Verify API contracts between services. Ensure producer/consumer agree on API shape.
+        Integration Tests -> Test service-to-service communication. Use test containers or mocked endpoints. Verify data flows correctly.
+        End to End Tests -> Test complete user flows across services. Minimal is only critical paths. Is most expensive and slowest.
+
+Cloud Technologies Basics
+
+    Cloud Computing:
+        Traditional -> Buy phyiscal servers, install in office, maintain hardware, limited scalability
+        Cloud -> Rent computing resources, access via internet, pay only for what you use, scale instantly
+
+        AWS:
+            EC2: Elastic Compute Cloud
+                Virtual servers in the Cloud
+                Like renting a computer
+                Ex: Run Java application on EC2 instance
+            S3: Simple Storage Service
+                File storage like Dropbox
+                Store images, videos, backups
+                Automatic backups, updates
+                High availability, reliability
+            RDS: Relational Database Service
+                Manage DB (MySQL, PostgreSQL)
+                Store user data without managing DB server
+            Lambda:
+                Serverless computing
+                Run code without managing servers
+            API Gateway:
+                Create and manage APIs
+                Route requests to appropriate services
+        
+        Azure (Microsoft):
+            ALso have Virtual Machines (similar to EC2), Blob Storage (S3), Azure functions (like Lambda), Azure SQL Database (RDS)
+        Google (GCP):
+            Also has Compute Engine (similar to EC2), Cloud Storage (S3), Cloud functions (like Lambda), Cloud SQL (like RDS)
+        
+        Why Cloud?
+            Spin up test environments quickly
+            Can create 10 new EC2 instances to test on 10 different configurations
+            Run tests in parallel
+            Destroy instances after tests
+            Only pay for usage time
+
+        Benefits of cloud v on-prem
+            Cloud offers elastic scaling, managed services, faster provisioning and easier global availability
+            On-prem offers more direct control but slower provisioning and higher ops overhead
+        
+        Containers -> Lightweight isolated runtime. Instead of running jobs on full machines, CI runs them inside containers. These include OS layer, runtime, tools/dependencies
+            Used for consistency, reproducability, scalability, fast startup, isolation
+            Ex: Jenkins -> Agent -> Launches container -> Tests run inside container
+            Ex: Jenkins -> Kubernetes -> Spawns containers on demand
+        
+        Scaling runners? More runners allow pipelines to execute jobs concurrently, reducing feedback time and enabling large test suites to run efficiently.
+
+        How to run automated tests in AWS?
+            Use CI (Jenkins) to trigger tests.
+            Run tests on EC2/container runners (Runner -> GitLab version of Agents in that both execute pipeline jobs on behalf of the orchestrator.)
+            Store artifacts/results in S3.
+            Push logs/metrics to CloudWatch (or ELK)
+            Tear down ephemeral resources after runs.
+
+        Store Build artifacts
+            JARs -> Nexus/Artifactory (or S3 if simple)
+            Images -> ECR (AWS) / container registry
+            Version them by build number + git SHA; keep retention policies
+        
+        Scaling helps testing because parallel execution reduces feedback time. Can shard test suites across agents/containers, run more environments in parallel and keep regression cycles short without overloading single machine.
+        Agents: Exeuction node where pipeline tasks actually run. The controller orchestrates jobs while the agents provide compute environments for building, testing or deploying software
+
+        Integration with CI/CD:
+            1. Commit code
+            2. GitHub/GitLab
+            3. Jenkins (running on EC2)
+            4. Pull code from Repo
+            5. Build application (mvn, Gradle)
+            6. Run unit tests
+            7. Run integration tests (connect to RDS test DB)
+            8. Build Docker image
+            9. Push to Docker register
+            10. Deploy to staging (EC2 or Lambda)
+            11. Run E2E tests (Selenium on EC2)
+            12. If tests pass -> Deploy to production
+
+        Questions
+            1. Do you have Cloud experience?
+                I haven't used Cloud thus far but have an understanding of the different tools from AWS EC2 for computing, S3 for storage, RDS for database management. I understand that the benefits come from quicker testing, parallel test execution and only pay for what you use
+            2. Difference between IaaS, PaaS, SaaS
+                IaaS gives you virtual machines where you manage everything from the OS up -> Like EC2
+                PaaS provides a platform where you deploy your code and the provider manages the infrastructure
+                SaaS is a ready-to-use software where you just use the application.
+
+CI/CD
+
+    Continuous Integration -> Automatically build and test code when developers commit. Catch bugs early
+    Continuous Development -> Automatically deploy to production after tests pass. Faster release.
+
+    Pipelines -> Define automated, repeatable workflow (build -> test -> report -> deploy)
+
+    Jenkins is a tool that coordinates build/test workflows
+        Stages ->
+            Checkout from Git
+            Build using Maven (mvn)
+            Run JUnit tests
+            Run Integration tests
+            Deploy to staging
+            Run End to End tests
+            Deploy to production
+
+        Test-Health-CLI Project
+            Jenkins ran daily at 9:00 AM PST
+            Accepts RESULT_FILE as parameter
+            Enables timestamps
+            10 minute timeout if no response
+            Checks out repo
+            Runs mvn package and executes CLI
+            Prints results to console (+ archives JAR)
+
+        Timeouts prevent reliability by preventing 'hung' jobs from consuming agents (worker machine that executes pipeline steps) indefinitely. Keeps CI capacity available and surface failures faster so teams can recover and rerun.
+
+    Benefits
+        Catch bugs early
+        Automated testing (no manual work)
+        Fast feedback (will know within minutes if code broke)
+        Consistent (same process each time)
+
+JIRA
+    How to track bugs?
+        Bug reported -> Triaged -> Prioritized -> Assigned -> Fixed -> Code reviewed -> Tested -> Closed (or reopened)
+        Track status, owner, priority, and release/version
+    What goes in tickets?
+        Clear summary, title
+        Steps to reproduce (exact)
+        Expected v actual result
+        Environment (build/version, browser, OS, service)
+        Logs/screenshots/Stack trace
+        Severity/priority + impact
+        Links (PR, commit, related tickets)
+    QA/Dev collaboration
+        QA provides reproducible reports + coverage/risk insight -> Dev provides root-cause + fix. Align on acceptance criteria, add automation, review flaky tests and use CI results/logs to triage quickly
+
+Design Test Environment Architecture (High level)
+
+    Separate prod/staging/test environments
+    Ephemeral test environments per branch if possible
+    CI triggers tests -> Results stored centrally
+    Observability (logs/metrics/traces) enabled
+    Stable test data strategy (seeded date, isolated account)
+    Secrets managed securely (vault/parameter store)
+
+Maven / Gradle
+
+    Java Build tools. Build tools make builds repeateable and consistent. You compile, test, package, manage dependencies and integrate cleanly into CI. Avoid "works on my machine but not elsewhere"
+
+    Maven is XML, Convention drive, stable/standard in enterprise.
+        Common lifecycle: Validate -> Compile -> Test -> Package -> Verify -> Install -> Deploy
+        Usually, you run mvn test or mvn package
+    Gradle is Groovy/Kotlin DSL, more flexible, often faster (incremental builds/caching). More configurable.
+
+    Dependency management is declaring external libraries (versions, transitive deps) so builds pull the right artifacts reliably, resolve conlficts and keep build reproducible
+
+
+System Design
+
+    Sizes
+        Bits -> 0 or 1
+        Byte = 8 Bits
+    Storage
+        Main
+            HDD (non volatile)
+            SSD is much faster
+        RAM primary active data holder
+            Data Segment, Variables
+            Volatile memory
+        Cache
+            L1 (closest)
+            L2
+            More frequently used memory
+    CPU
+        Code compiled into machine code, then CPU executes
+
+    Pipeline
+        Automating deployment -> Continuous integration, continuous deployment
+        Needs load balancer, then connected to Storage
+        Logging and monitoring to detect failures -> Alert services
+        Don't debug in production but rather in staging (copy of production)
+    
+    Pillars
+        Good design -> Scalability, Maintainability, Efficiency, Reliability
+        Moving Data
+            Between DB, Devs, Users
+        Storing Data
+            Access patterns, indexing strategies, backup solutions
+        Transforming Data
+            Json, Sql -> User readable
+        CAP theorem
+            Consistency -> Data remains consistent across all users
+            Availability -> System is reliable and open to take requests
+                Measured in percentage (99% uptime v downtime)
+                SLO - Service level objectives (300ms, 99%)
+                SLA - Service level agreements (99.99% agreement)
+                Reliability, Fault tolerance, redundancy
+            Partition tolerance -> Ability to continue working even if parts are not working
+            Can only get 2 of the 3
+        Speed 
+                Throughput -> How much our data can handle over a certain period of time (requests per second, queries per second)
+                Latency -> How long it takes to handle a single request
+        Network
+            IP -> Unique adress (32 bit -> now becoming 128 bit)
+            Computers communicate by sending over server with IP header
+            IP Layer -> Internet protocol
+            Application layer -> HTTP data
+            Transport layer -> TCP (Transmission control protocol): Reliability, holds information about port numbers
+                3 way handshake -> SYN, SYN ACK, ACK
+                UDP (user datagram) is less reliable but faster -> Video calls where data loss is accetable but speed loss is not
+            DNS (Domain Name System) -> Human readable that maps to IP address
+            Infrastructure -> 
+                Public, private IP addresses
+                tatic or dynamic (residential) IP addresses
+                LAN (local area network)
+                PORTS (80 HTTP, 443 HTTPS, etc)
+            HTTP -> Hyper Text Transfer Protocol
+                Contains URL, Method, Code, Address, etc.
+                Return codes
+                    2xx is success codes
+                    3xx is redirection codes
+                    4xx is client error codes
+                    5xx is server error codes
+                Methods
+                    GET -> Retrieve information
+                    POST -> Create information
+                    PATCH -> Update information
+                    DELTE -> Delete information
+            Websockets
+                Two way communicationg between server and client
+                Constant updates
+                Live chats, stock markets, sports feeds, etc.
+            SMTP (Email transmission)
+                IMAP -> Retrieve emails from server
+                POP3 -> Download emails from server
+            File transfer protocols -> 
+                FTP: tranferring files over thje internet
+                SSH: Command line login and file transfer
+
+            WebRTC: Browser to browser applications for voice valling, video chat
+            MQTT: Lightweight message protocol
+            AMQP: Protocol for message oriented Middleware
+
+        API
+            Application Programming interface
+            CRUD -> Create, Read, Update, Delete
+            REST -> Representational state transfer 
+                Stateless
+                Standard HTTP methods
+                Over fetching and under fetching
+                JSON for data exchange
+            Graph QL
+                Avoids under and over fetching
+                Strongly typed schema based queries
+                Only POST requests
+                Responds with 200 OK
+            Limit, Offeset, Start date, End date -> Allows for specific informatino
+            Idempotent -> Calling same method always returns same data
+            Set Rate limits to limit number of reqeusts by users
+            CORS -> Cross origin resource sharing so we can control which domains access our API 
+            Caching improves efficiency by storing copy of data in temporary storage
+                Browser caching -> Users system 
+                    Cache hit and Cache miss -> Cache ratio is hits/misses+hits
+                Server caching -> Server side stored on separate cache server or actual server. Checks here first before querying database
+                    Write through cache writes to cache server and database at same time -> May be slower
+                    Write back writes to cache first then from cache to database -> Might lose data
+                Database caching
+                    Can be within database itself or external layer
+                    Query goes to cache first then database if not found
+                CDNs
+                    Network of servers around the world
+                    Take from origin server which sends to nearest CDN server to user. If it has in cache, it sends to user, otherwise fetches from server and caches it (Pull based)
+                    - Pull based -> Pulls from server then places in cache
+                    - Push based -> Upload to server then push to CDN servers
+                    Reduced latency, high Availability, improved security
+                Eviction policies
+                    Least recently used (LRU)
+                    First In First Out (FIFO)
+                    Least frequently used (LFU)
+        Proxy server
+                Intermediary between client requesting a resource and the server providing that resource
+                Can provide caching resources, load balancing, security, etc.
+                Types
+                    Forward proxy (Client -> F Proxy -> Internet server) -> In front of clients and used to send requests to other servers. Internal networks, hides client
+                        Used to cache frequently used websties, anonymize user traffic, manage multiple accounts
+                    Reverse proxy (Client -> R Proxy -> One of many servers) -> In front of one or more websites intercepting requests form internet. Hides backend servers
+                        Used for load balancing, SSL termination, caching, filtering
+                    Transparent 
+                        Idea is that you know its there 
+                    Anonymous
+                        Idea is that it hides your IP
+                    Distorting
+                        Lies abut your IP
+                    Elite
+                        Pretends it doesn't exist 
+                    Open
+                        Anyone can use it 
+            Load balancer (Reverse proxy)
+                Spreading requests to reduce load on servers -> Prevents bottleneck, outages
+                Round Robin -> Each server gets request in order and works best when servers are identical
+                Least connections -> Send request to least busy server, works bset for long-lived requests
+                Least response time -> First server to repond gets request, works best for latency-sensitive systems 
+                IP hashing -> Same client goes to same server, used for session persistence
+                Weighted variants -> Stronger servers get more traffic (most used in real world)
+                Geographic routing -> Closest server wins
+                Consistent hashing -> Minimizes reshuffling when nodes change. Critical for distributed systems
+                Health checks, redundancy, DNS failover since if LB fails, everything fails
+        Databases
+            Relational -> Structured, ACID (Atomicity, Consistency, Isolation, Durability)
+                Examples are MySQL, PostgreSQL
+                Used for transactions, financial data, complex joins
+            NoSQL -> Flexible, horizontally scalable (Split data across servers, range based, hash based, geo based, etc.), weaker consistency guarantees
+                Examples are MongoDB, Redis
+                Used for massive scale, fast iteration, unstructured data
+            Vertical scaling
+                Bigger machine
+                Simpler but limited
+                Single point of failure
+            Horizontal scaling
+                Sharding
+                    Split across servers
+                    Range based, hash based, geo based
+                Replication
+                    Duplicate data for availability 
+                    Master slave -> Read scaling
+                    Master master -> Write scaling, harder
+
+System Design Questions:
+    Design an automated test framework from scratch
+        Test Layer (Top)
+            Actual test cases
+            Uses page objects/services
+            Contains Assertions
+        Page Object / API layer (Middle)
+            Page objects (UI)
+            API clients (for services)
+            Reusable actions/methods
+        Utility Layer (Bottom)
+            WebDriver setup
+            Test data generators
+            Reporting utilities
+        Configuration
+            Environment configurations
+            Test data files
+            Dependencies
+        Directory
+            Tests are seperated into ui, api, E2E
+        POM
+            For UI testing. Each page is a class with locators and actions. This keeps tests maintainable when UI changes.
+        Configuration
+            Use properties files per environment and pass the environment as a Maven parameter
+        Test Data
+            Combine builder patterns for programmatic creation and JSON files for bulk data using unique identifiers to avoid collision
+        Waits (Thread.sleep()) -> Reliability checking
+        CI/CD integration
+        TestNG groups -> Run smoke tests
+        Reporting -> ExtentReports for detailed HTML reports
+
+Questions about Code:
+
+    Tell me about a challenging bug you debugged?
+        Had a bug where tests were incorrectly flagged as flaky. The issue was that I was checking if a test appeared in failingByName map, but that map only contained tests that failed once.
+        That means, if a test passed every time, it wouldn't be in the map, so I would get a null pointer exception. To fix it, I used getOrDefault(name, false) instead of direct map access.
+    How do you ensure code quality?
+        Null safety -> Handled null inputs throughout, like checking if testName is null or blank.
+        Edge cases -> Handled empty JSON files just in case.
+        Clear error messages -> Ex: When file path is wrong, users get clear message
+        Code organization -> Separation of concerns (Main handles I/O, ReportGenerator handles business logic, Report is a data class). Makes it easier to test and maintain. If we want to generate reports in different formats (HTML, JSON), we can create new generators without changing the Report model.
+        Defensive programming -> safeUpper() to handle null/whitespace in status strings.
+    Jenkins
+        Automates daily health reporting
+        Triggered at 9am via correlation
+        Builds project with mvn
+        Runs CLI tool
+        Archives JAR artifact
+        Captures exit code for pass/fail status
+    Improvements
+        Historical tracking -> Storing results in a database to show trends over time like RDS
+        Alerting -> Similar to how I had an email extension from my previous Jenkins work, could have Teams notifications
+        HTML reports -> Generate visual reports with charts to show trends
+        Performance analysis -> Track test duration to identify slow tests
+        Better flaky detection -> Using Z-scores instead of simply pass/fail
+    Jackson over GSON?
+        Better performance, more features like JavaTimeModule for Instant parsing and is more commonly used in enterprise. Needed TypeReference for List deserialization
+    Why this approach?
+        Used single pass algorithm to build all data structures at once -> pass/fail counts, failing test frequency, and flaky detection flags. More efficient that multiple passes through data
+    Why Streams API?
+        Used it for flaky detection and suite grouping because it makes the code more declarative and easy to understand -> Filter for tests with both states, sort, and collect.
+    Why LinkedHashMap and HashMap?
+        LinkedHashMap for failingByName because I want to preserve insertion order in the report -> Tests appear in the order they were ran which is more intuitive for users
+        HashMap for sawPass and sawNonPass because order doesn't matter there.
+    What if two threads call generate() simultaneously?
+        Not thread-safe since we're using HashMap and LinkedHashMap which aren't synchronized.
+        If we needed thread-safety, I'd use ConcurrentHashMap instead, make the method synchronized and use ThreadLocal if each thread needs its own instance.
+    How does the flaky detection work?
+        I use two HashMaps -> One for Pass and one for Non Pass. As I iterate through results once, I mark tests in these maps. Then I filter the failed tests (from failingByName) to find those that are in both maps which are the flaky tests.
+
+
+    How would you test a login page?
+        Unit tests for the validation logic (does it handle things correctly like format, empty fields, etc.)
+        Integration tests to validate if it verifies credentials against DB and gives proper authorization
+        E2E tests for critical user paths -> Can you actually login and check dashboard.
+        Check positive, negative, edge cases and security.
+    How would you test an API endpoint?
+        Unit tests for endpoint logic -> Mock DB and test business logic in isolation
+        Integration tests -> For full flow -> Hit actual endpoint, verify DB changes, check response format
+        CHeck positive, negative, authentication, authorization, not found, etc.
+    Why did you choose this cron schedule?
+        Business hours requirements
+        Fresh data to analyze each morning after nightly builds
+        Consistent cadence -> Daily execution creates trend over time
+        Resource availability is better in morning
+    What does set -euo pipefail do?
+        Bash safety pattern that makes scripts fail fast and predictably.
+        -e -> Exit on error
+        -u -> Treats undefined variables as errors. Prevents silent bugs
+        -o pipefail -> Nakes
+
+    Frequent fails
+        for(TestResult r : results){
+            if(r.status.equals("FAIL") || r.status.equals("ERROR")){
+                failCounts.put(r.testName, failCounts.getOrDefault(r.testName, 0) + 1);
+            }
+        }
+        for(Map.Entry<String, Integer> entry : failCounts.entrySet()){
+            if(entry.getValue() > 1){
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+    Group test results by suite name
+        return results.stream().filter(r -> r.suite != null && !r.suite.isBlank()).collect(Collectors.groupingBy(r -> r.suite));
+    Calculate average duration per test
+        averagingLong(r -> r.durationMs)
+    Find duplicate test names
+        Create two hashsets, one seen and one duplicate. Loop through results and if its already in seen, add it to duplicates.
+
+    Arrays & HashMap (6 problems):
+    Two Sum (#1)
+    Valid Anagram (#242)
+    Group Anagrams (#49) ⭐ Similar to your suite grouping
+    Top K Frequent Elements (#347)
+    Contains Duplicate (#217)
+    Product of Array Except Self (#238)
+    Check if input is power of 2
+    Ordered Set
+    Calculate Stock Ownership
+    DFS Course Prereqs
+    Find Nearest Timestamp
+    Implement Join function
+
+    Strings (3 problems):
+    7. Valid Parentheses (#20) ⭐ Warmup
+    8. Longest Substring Without Repeating Characters (#3) ⭐ Good pattern
+    9. Valid Palindrome (#125)
+
+    Trees (2 problems):
+    10. Binary Tree Level Order Traversal (#102) ⭐ Shows BFS
+    11. Maximum Depth of Binary Tree (#104)
+
+    Misc (4 problems):
+    12. Valid Sudoku (#36) ⭐ Validation logic
+    13. Best Time to Buy and Sell Stock (#121)
+    14. Merge Intervals (#56)
+    15. Generate Parentheses (#22) - backtracking practice
+
+    Bonus If Time (5 more):
+    Longest Consecutive Sequence (#128)
+    Encode and Decode Strings (#271)
+    Container With Most Water (#11)
+    3Sum (#15)
+    Search in Rotated Sorted Array (#33)
+
+    Testing example
+        @Test
+        public void testFlakyDetection() {
+            List<TestResult> results = Arrays.asList(
+                createResult("test1", "PASS"),
+                createResult("test1", "FAIL"),  // Flaky!
+                createResult("test2", "PASS"),
+                createResult("test2", "PASS")   // Not flaky
+            );
+            
+            Report report = new ReportGenerator().generate(results);
+            
+            assertTrue(report.flakyTests.contains("test1"));
+            assertFalse(report.flakyTests.contains("test2"));
+        }
+    
+    Complete
+        // Feature 1: Find slowest tests
+        public List<String> findSlowestTests(List<TestResult> results, int topN) {
+            // YOUR CODE HERE
+        }
+
+        // Feature 2: Calculate pass rate by suite
+        public Map<String, Double> passRateBySuite(List<TestResult> results) {
+            // YOUR CODE HERE
+        }
+
+        // Feature 3: Find tests that always fail
+        public Set<String> alwaysFailingTests(List<TestResult> results) {
+            // YOUR CODE HERE
+        }
+
+        3. Be Ready to Extend Your Solution
+        They might ask you to add a feature live:
+        "Add a method to find the slowest tests"
+        javapublic List<String> findSlowestTests(List<TestResult> results, int topN) {
+            return results.stream()
+                .sorted(Comparator.comparingLong(r -> -r.durationMs)) // descending
+                .limit(topN)
+                .map(r -> r.testName + " (" + r.durationMs + "ms)")
+                .collect(Collectors.toList());
+        }
+        "Add a method to group tests by day"
+        javapublic Map<LocalDate, List<TestResult>> groupByDay(List<TestResult> results) {
+            return results.stream()
+                .filter(r -> r.timestamp != null)
+                .collect(Collectors.groupingBy(r -> 
+                    r.timestamp.atZone(ZoneId.systemDefault()).toLocalDate()
+                ));
+        }
+
+        4. Common Follow-up Coding Problems
+        Based on your take-home, they might give you similar problems:
+        Problem 1: "Find duplicate test names"
+        javapublic Set<String> findDuplicates(List<TestResult> results) {
+            Set<String> seen = new HashSet<>();
+            Set<String> duplicates = new HashSet<>();
+            
+            for (TestResult r : results) {
+                if (!seen.add(r.testName)) {
+                    duplicates.add(r.testName);
+                }
+            }
+            
+            return duplicates;
+        }
+        Problem 2: "Calculate average duration per suite"
+        javapublic Map<String, Double> averageDurationBySuite(List<TestResult> results) {
+            return results.stream()
+                .filter(r -> r.suite != null)
+                .collect(Collectors.groupingBy(
+                    r -> r.suite,
+                    Collectors.averagingLong(r -> r.durationMs)
+                ));
+        }
+
+ELK (Elasticsearch -> Index and store logs, Logstash -> Collects and parses logs, Kibana -> Search logs, create dashboard, etc.) -> Open source centralized logging and analytics solution for real-time monitoring
+
+    How to structure log output?
+        Use structured + consistent logs ->
+            Timestamp, level, component, request/test identifier
+            One event per line
+            Avoid noisy dumps; log actionable context
+            Ideally JSON logs for easy parsing.
+
+    What metadata to capture?
+        For test runs:
+            Test_id, test_name, suite
+            Status, duration
+            Timestamp, build number, git commit SHA, branch
+            Environment (service version, region, browser/OS if UI)
+            Error type/message + (optional) stack trace hash
+            Retry count
+
+    How to analyze trends?
+        Store runs over time, then compute:
+            Failure rate per test/suite
+            Flake rate (pass+fail across runs)
+            Mean/95th duration
+            Top recurring error signatures
+        Visualize in dashboards; alert on spikes/regressions.
+
+    Why centralize logs?
+        In distributed systems, evidence is spread across services (API, DB, CI, UI, etc.). Centralizing enables fast search/correlation, unified dashboards, and quicker incident/failure triage.
+
+    How would you track flaky tests?
+        Define flakiness as “same test alternates PASS and FAIL/ERROR across runs.” Track per-test history and compute a flake rate over a window (e.g., last 50 runs). Flag tests above a threshold and group by error signature.
+
+    How to debug failures across services?
+        Start from the failing request/test ID (correlation ID)
+        Trace across service logs
+        Check recent deploys/config changes
+        Look at metrics (latency, error rate)
+        Identify whether it’s test issue, infra issue, or product regression
+        Reproduce locally or in a staging environment when possible
+
+    How to design logging for automated tests?
+        Implement structured JSON logs with consistent fields such as timestamp, test ID, status, dduration, build number, etc.
+        Centralize logs with ELK stack so we can analyze over time -> Such as failure rate, flake rate, error signatures, etc.
+        Allows fast triage, regression detection and better observability
+
+    
+Java Debugging
+    Static methods cannot access non-static variables
+        Either create an instance
+        Make variable static
+    Can only have one public class per file 
+        Any other classes must be package-private (default)
+    String Comparisons
+        Use .equals instead of ==. == may work sometimes because of String Pool (inside heap)
+        Immutable -> Creates new string object when modifying
+    Hashtable multithreading
+        Synchronized but slow
+        ConcurrentHashMap is faster and thread-safe as well
+        Race condition -> Where multiple threads access shared data
+            Fix by using synchronized method
+        Deadlocking
+            Using tryLock instead
+        
+DB Concepts
+    M:M is where many of x can have many of y -> Many students can enroll in many courses and many courses have multiple students
+    Indexing to speed up querying. Slows down writes so avoid for small tables and columns with many duplicates
+    Normalization -> Reduce redundancy and improve data integrity.
+        1NF is atomic values. Each column with its own names and ordering does not matter
+        2NF has no partial dependencies
+        3NF has no transitive dependencies
+
+Big O notation
+    O(1) -> Atomic calcualtions, index lookups, HashMap get and put
+    O(logn) -> Binary search, tree operations
+    O(n) -> Array loops
+    O(nlogn) -> Efficient sorting (heap, merge)
+    O(n^2) -> Nested loops, less efficient sorts (bubble, selection)
+    O(2^n) -> Fibonacci recursive
+
+Test High Availability Zone?
+    System continues operating despite component failures
+    Testing strategy:
+        Failover testing -> Test by simulating primary server failure
+            Steps: System running on primary server, forcefully shut down primary, verify secondary, verify no data loss, verify all services functional on secondary
+            Expected automatic failover, minimal downtime
+        Load balancing testing -> Distribute traffic across multiple servers
+            Steps: Send requests to load balancer, verify requests distributed evenly, take one server offline, verify traffic reroutes to remaining servers, verify no failed requests
+            Expected even distribution, graceful degradation
+        Data Replication testing -> Data synchronized across availability zones
+            Steps: Write data to primary zone, verify data appears in secondary zone, check replication lag (less than a second), simulate network parition, verify conflict resolution
+            Expected consistent data across zones
+        Disaster Recovery testing -> Complete zone failure.
+            Steps: Simulate entire zone going offline, verify application continues in other zone, check RTO (recovery time objective), RPO (point) and verify data consistency
+            Expected system operational and data intact
+        Monitoring and Alerting testing -> Alerts trigger on failures
+            Steps: Simulate various failure scenarios, verify monitoring detects issues, verify alerts sent to on call team, check alert accuracy
+            Expected timely, accurate alerts
+
+Bug cycle
+    NEW -> Bug just reported by QA, user, dev. Not yet reviewed and status is unassigned
+    ASSIGNED -> Bug reviewed and assigned to developer. Priority and severity set. Target version determined.
+    OPEN -> Developer working on fix. Code changes being made. May be blocked waiting for info
+    FIXED -> Developer commited fix. Ready for QA validation. Fix deployed to test environment
+    PENDING TESTING -> QA notified to verify. Fix available in test environment. Test cases ready to execute.
+        VERIFIED -> QA confirms bug is fixed. Retested with original steps. Regression tests passed. Ready for closure.
+        REOPENED -> Fix did not work or caused new issues. Sent back to developer with details. Cycle repeats from ASSIGNED.
+    CLOSED -> Bug confirmed fixed and verified. Deployed to production. No further action.
+    DUPLICATE -> Link to original bug
+    WON'T FIX -> Not a bug or too minor to fix.
+    CANNOT REPRODUCE -> Need more information
+    DEFERRED -> Low priority but is a valid bug
+
+Test Cases for a Web Page
+    Visual
+        Page loads completely
+        Product image display
+        Zoom functionality
+        Responsive design
+        Cross-browser compatibility
+    Functional testing
+        Adding items to cart 
+        Quantity selection
+        Out of stock items 
+        Product details 
+        Size/color selection
+    Performance testing
+        Page load time
+        Image load time
+        Multiple users concurrently
+    Security testing
+        SQL injection -> Append SQL code to URL parameters. Expect no database access
+        XSS attack -> Script should not run
+        HTTPS -> Verify it loads with HTTPS
+    Accessibility testing
+        Screen reader
+        Keyboard navigation
+        Color contrast
+        Font scaling
+    Integration tests
+        Persistence, changes are saved
+        Inventory update -> Check if item turns to out of stock and if you are still able to click
+        Related products -> Check if recommendations work
+        Reviews integration -> Verify reviews displayed correctly. Loaded from DB.
+    Negative tests
+        Invalid product ID 
+        Negative or oversized quantity
+        Rapid clicks
+        Price manipulation
+    
+Testing a vending machine
+    Understand requirements -> What products are sold? What payment methods? How to handle out of stock or insufficient funds?
+    Functional testing -> 
+        Testing happy path (Select product -> Insert money -> receive product and correct change)
+        Eedge case (out of stock, insufficient funds, machine out of change, transaction cancelled)
+        Negative case (fake money, phyiscal tampering, trying to purchase without paying)
+    Integration testing -> Payment processor communication, inventory system update
+    Non functional testing -> 
+        Performance -> Transaction completion time, handle queue of customers, system uptime requirements
+        Usability -> Is display readable, buttons responsive?
+        Security -> Card data encryption, tamper detection, secure payment processing
+        Reliability -> Works in different temperatures, handles power outages gracefully

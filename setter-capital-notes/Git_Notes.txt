@@ -1,0 +1,60 @@
+version control
+free, open source
+ 
+dir -> directory
+cd -> change dir
+cli -> command line interface
+
+commands
+    clone -> from github
+    add -> track files and changes
+        . to add all files to staging (working directory)
+    commit -> save files
+        -m to add message
+        -am works for modified files
+    push -> upload git commits to remote repo
+        origin is location of repo
+        main is branch
+    pull -> download changes from remote repo and merges
+    fetch -> download changes but do not merge
+    stash -> keep uncommmited work temporarily
+
+    git init -> initialize project
+    git status -> check what is tracked and what is not
+    git remote add origin {link} -> push to remote link
+    git push -u origin main -> upstream so this becomes default
+
+    branching
+        main is naming convention for main branch
+        can split off to separate branches -> feature branch. changes saved on that will only be seen on that
+        merge branch back to main
+        rebase -> rewrites history (linear)
+        git branch -> * means currently on that branch
+        git checkout -b {name} -> create new branch
+        git checkout {branch} -> switch branch
+        git diff compares two branches and what is different
+        pr -> pull request. delete previous branch after that
+        git branch -d {name} to remove
+        git merge main -> keep up to date with main
+            if merge conflict, usually vscode will tell you >>> or <<< and if you want to save changes
+            commit after making merge conflicts
+
+    undoing
+        git restore -> discard changes
+        git revert -> undo safely and create new commit
+        git reset HEAD -> move pointer to last commit
+            ~1 will go one commit prior to that
+        git log -> commits have commit hashes
+        git reset {hash} -> unstages prior to this commit
+        git reset --hard {hash} -> undo commits and delete them
+
+    forking
+        fork public repos for your own personal github
+
+    best practice to have dev, main branches where everything gets merged into dev first
+
+    .gitignore -> file that prevents files from being tracked when using add .
+
+ssh -keygen is how we generate keys to access github. public key can be put on github, private is only for you so you prove you created public key
+
+

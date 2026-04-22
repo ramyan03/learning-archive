@@ -1,0 +1,266 @@
+- Introduction to API Testing
+    - API → Application Programming Interface
+        - Allows application to talk to each other (Messenger like, using requests)
+    - Web Services
+        - Resource that is made available over the internet → Requires network
+        - Standardized medium to generate communication between client and server apps on web.
+        - Provide common platform that allows multiple applications built on various programming languages to have ability to talk to each other
+        - Talks to UI, database but also other web services to retrieve some information (ie: Log onto eBay with Google where validation is done by Google)
+        - Protocols are SOAP, REST, WSDL
+    - Relationship
+        - Web Service is a type of API that is accessible over the web. All web services are APIs but not all APIs are web services
+        - Used to enable communication between different software components especially over a network
+        - Both facilitate data exchange between systems, often using similar formats like JSON and XML
+    - Stateless v Stateful
+        - Stateless does not retain any information (state) between different requests. Each request from client to server is independent and contains all information needed to process and understand request. Ex: HTTP
+            - No tight dependency
+            - Works better at time of crash since there is nothing to be restored
+            - Transaction handling is faster
+            - Easier to implement
+        - Stateful retains this information across multiple requests. Each request may depend on data stored from previous interactions. Uses cookies or server-side sessions.
+            - Tight dependency
+            - Worse at time of crash since we need to keep information
+            - Transactions are slower
+            - Logically heavy to implement
+    - SOAP v RESTful
+        - SOAP
+            - Strict protocol with specific standards in XML
+            - Can be stateful or stateless
+            - Slower, less flexible and requires more bandwidth but more secure
+        - RESTful
+            - Architectural style or design pattern for API
+            - Uses JSON, XML, YAML, plain text, etc
+            - Stateless
+            - More efficient, faster, less bandwidth, more flexible but less secure
+    - XML v JSON
+        - XML → Extensible Markup Language that defines set of rules for encoding documents in a format that is both human and machine readable
+        - JSON → JavaScript Object Notation
+            - Primarily used to transmit data between a server and web application
+            - Lightweight compared to XML
+            - Key value format and human readable
+            - Contains states but not methods
+            - Has different property types → String, Boolean, Integer, Array, etc.
+            - Most languages have libraries that can parse
+    - Status Codes
+        - 1xx → Continue
+        - 2xx → Success
+        - 3xx → Redirection
+        - 4xx → Client error
+        - 5xx → Server error
+    - HTTP
+        - Methods
+            - POST → Send data to server
+            - GET → Retrieve data from given server using given URL
+            - PUT → Update/replace all current representations of target resource with uploaded content
+            - PATCH → Partial update
+            - DELETE → Removes all current representations of target
+        - Requests
+            - What the client sends to server
+            - End point is address where we send request → Contains Base URL, resources, parameters
+            - Methods (Mentioned above)
+            - Headers which contains information such as type of content, connection, authorization, meta data, etc
+            - Body is the payload being sent
+        - Response
+            - Information returned from server as result/answer/reply
+            - Contains status code, header (data, last modified, content-type, etc), body (data that comes back to client from server)
+    - Testing
+        - Overview
+            - Check whether API meets expectation in terms of functionality, reliability, performance, etc
+        - Main objectives
+            - Implementation correct as expected (no bugs), implementation is working according to api documentation
+        - Process
+            - Checking API contract
+                - API is a contract between client and server
+                - Important to make sure contract is correct
+                - Check
+                    - Endpoints are correct
+                    - Resource correctly reflects object model
+                    - No missing functionality or duplicates
+                    - Relationship between resources are reflected in API correctly
+                    - Documentation provided
+            - Creating test cases
+                - Types of tests
+                    - Basic positive tests (happy case)
+                    - Extended positive testing with optional parameters for extra functionality
+                    - Negative testing with valid input
+                    - Negative testing with invalid input
+                    - Destructive testing (null, empty string, etc)
+                    - Security, authorization and permission tests
+            - Executing test cases
+                - Verify
+                    - Data accuracy, HTTP status code, response headers, response body, authorization checks, error messages, response time
+            - Implementing different test flows
+                - Some test flows
+                    - Single step → Execute single API request and check accordingly
+                    - Multi step workflow → Multiple requests (ie: A Post request followed by a Get request)
+                    - Combined API and UI test → Make sure data is present in UI level
+        - Parameters
+            - Variable used to define and pass data to API request in testing
+            - Can customize and control data being sent to and received from server
+            - Types
+                - Query
+                    - Not part of URL
+                    - Passed as Key+Value format
+                    - Params are also added after question mark and separated by &
+                    - Used to filter, sort, or other operational instructions
+                    - Returns as list encapsulated
+                - Path
+                    - Parameter part of URL after /
+                    - Used to uniquely identify a resource or subset of resources
+- Postman
+    - Introduction
+        - Popular API development and testing tool that is used as middle man to connect to API
+        - Can be used to build request, send request, and analyze Reponses then organize into collections
+    - Key functionalities
+        - Request building
+        - Environment management
+        - Testing and automation
+        - Documentation
+        - Mock server
+    - Creating Requests
+        - GET → Fetch resource without modifying
+            - Steps: Select GET method, enter API endpoint URL, click send
+        - POST → Creating new resources into database
+            - Steps: Select POST method, enter API endpoint URL, navigate to Body tab to include data, click send
+        - PUT → Replace a resource entirely
+            - Steps: Select PUT method, enter API endpoint URL, navigate to Body tab to include new data, click send
+        - DELETE → Removing resource from collection
+            - Steps: Select DELETE method, enter API endpoint URL, navigate to Body tab to include data you want deleted, click send
+    - JSON Server → Mock REST API server that we can use with 0 coding
+    - Collections
+        - Organize and group API requests
+        - Environment management
+    - Variables
+        - Store data or value that can be reused in other requests
+        - Scope ranges from Global to Environment to Collection to Local
+    - Assertions
+        - Assert response of API testing
+        - Assert status code, content of body, content of header, etc.
+- REST Assured
+    - Overview
+        - Java-based tool used to automate API testing
+        - Sends and reads request and response of API information in form of JSON format
+        - Using BDD
+    - Benefits
+        - Open source
+        - Compatible with CI/CD integration
+    - Maven
+        - Need Object Serializer (Jackson, Gson, Johnzon, etc.)
+    - Assertions
+        - Hamcrest library to do assertions (part of Assured dependency)
+        - Defined after the then() keyword
+        - assertThat() keyword can be emitted or omitted for assertion
+        - hasItem(), is(), containsString(), containsInAnyOrder(), hasItems(), hasSize()
+    - Logging
+        - Can be obtained from either request or response
+        - Need to put log syntaxes after given() → Requests
+        - Need to put log syntaxes after then() → Responses
+        - log().
+            - all(), params(), body(), headers(), cookies(), etc.
+            - For Response specifically, we can do log().ifError(), log().ifStatusCodeMatches(), etc.
+            - For Request specifically, we can do log().path(), log().method()
+    - Format for methods
+        - Given (content type), With (Body), When (End point), Then (Assertion)
+    - GET Method
+        - Need to mention ContentType, EndPoint, Assertions
+        - For Path Param, we also need to include the Path Param
+        - For Query Param, we also need to include the Query Param
+    - POST Method
+        - Need to mention ContentType, EndPoint, Assertions, Body
+    - PUT Method
+        - Need to mention ContentType, EndPoint with ID, Assertions, Body
+    - DELETE Method
+        - Need to mention ContentType, EndPoint with ID, Assertions
+    - Demo
+        - Classes
+            - POJO Post
+            - PostsMethodsWithSerializeDeserialize
+                - performGETPost()
+                    - Use Response response = given().contentType(ContentType.JSON)… for all methods. Same with add header including authorization, bearer, access token (from authorization class)
+                    - .extract().response()
+                    - response.jsonpath().getlist(””,Post.CLASS)
+                    - Deserialize
+                - performGETPostPathParameter(Str id, Str s)
+                    - extract().as(post.class)
+                - performGETPostQueryParameter(Str id, Str s, Str y)
+                    - Reminder its encapsulated in list
+                    - extract().as(post[].class)
+                - performPOSTPost(Str id, Str s, Str y)
+                    - Use HashMap<String, String> postContent where we put the 3 params into Map using same keys put(”id”, id), etc.
+                    - Access code 201
+                    - Or use Post POJO by initializing and passing it
+                - performPUTPost(Str id)
+                    - String body = “”” { “title”: “your title” etc. } “”” ;
+                - performDELETEPost(Str id)
+                - Assert using assertThat() using hamcrest library
+                    - .log().all()
+            - RunnerModule3 → Main method
+- Authentication
+    - Hamcrest
+        - Overview
+            - Framework for software tests used for REST Assured
+            - Compatible with JUnit
+            - Third generation matcher → AssertThat keyword
+        - Matchers
+            - Basic → equalTo, is, not
+            - Collection → hasSize, contains, containsInAnyOrder
+            - Object → instanceOf, sameInstance
+            - String/Number → startsWith, endWith, greaterThan, CloseTo
+    - POJO
+        - Overview
+            - Plain Old Java Object
+            - Define an entity (eg. Employee, Car)
+            - Encapsulates Business logic such as accessing Database
+        - Implementation
+            - Does not extend of implement any classes/interfaces
+            - Uses private fields/attributes
+            - Uses public getter/setter methods
+            - Uses default constructor
+            - Might have parameterized constructors
+            - Does not have special annotations
+    - Deserialization and Serialization
+        - Overview
+            - Serialization is process of converting object or data structure into a format such as Byte stream, JSON, XML
+            - Deserialization is the opposite → Serialized data is converted back into original object or data
+        - Visualization
+            - Client contains POJO → Serializes to JSON → Requests to Server
+            - Server sends response to JSON → Deserializes to POJO
+    - Authentication is about Who you are
+        - Single, Two Factor, Multi Factor
+    - Authorization is about What right you have
+        - Basic Auth, Bearer Token
+    - TestNG
+        - Use Class PostsMethodsAuthentication
+            - Private static string access_token
+            - Authentication method that has String block called credential with email and password. access_token is set to given, with (credential), when (path including auth/login) then extract path
+
+How would you automate API testing?
+
+- API testing automation verifies that backend services work correctly without a UI.
+- Steps are to send HTTP requests using Python requests, Postman or Robot Framework. Then validate the response by checking status codes (200, 404, 500, etc.), verify response body, and validate JSON schema or fields. We test for valid requests, invalid inputs, authentication failures, edge cases, etc. Lastly integrate it into CI/CD → Run in Jenkins
+
+How to authenticate APIs
+
+- Use API keys → Client sends key with request.
+- Have OAuth/token based authentication → User logs in, server returns access token, token sent with requests
+- HTTPS/SSL
+- Additional protections
+    - Rate limiting, input validation, JWT tokens, role based access control
+
+Open API
+- Specification
+    - Defines how to describe a REST API interface -> OPEN API Defintino (File (Yaml, Json) that describes what an API or service can do)
+    - Standardized format
+    - Human and machine readable
+- Describe
+    - Resrouces
+    - Endpoints
+    - Operations
+    - Parameters
+    - Authentication/Authorization
+- Guidance
+    - Understand or actually use the service of the REST API
+- Extend REST API with tooling
+    - Ex: API validator that checks if REST API conforms to industry standards
+    - API Doc generator -> Interactive documentation/references
+    - SDK generator

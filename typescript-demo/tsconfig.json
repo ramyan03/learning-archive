@@ -1,0 +1,15 @@
+// target: the version of JavaScript to compile to.
+// module: the module system to use.
+// strict: enables/disables strict type checking.
+// outDir: the directory to output the compiled JavaScript files.
+// rootDir: the root directory of the TypeScript files.
+// include: an array of file/directory patterns to include in the compilation.
+// exclude: an array of file/directory patterns to exclude from the compilation.
+
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}

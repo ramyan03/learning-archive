@@ -1,0 +1,125 @@
+{
+  "plants": [
+    {
+      "id": "1",
+      "name": "aloe vera",
+      "price": 10.5
+    },
+    {
+      "id": "2",
+      "name": "peace lily",
+      "price": 12.5
+    },
+    {
+      "id": "3",
+      "name": "bird of paradise",
+      "price": 20.5
+    },
+    {
+      "id": "4",
+      "name": "venus flytrap",
+      "price": 16.25
+    },
+    {
+      "price": "9.99",
+      "name": "sunflower",
+      "id": "ediLN_RHPQQ"
+    }
+  ],
+  "comments": [
+    {
+      "id": "1",
+      "customerId": 1,
+      "body": "it is so beautiful",
+      "plantId": 1
+    },
+    {
+      "id": "2",
+      "customerId": 2,
+      "body": "I love my plant",
+      "plantId": 2
+    },
+    {
+      "id": "3",
+      "customerId": 3,
+      "body": "my cricket is hungry",
+      "plantId": 4
+    },
+    {
+      "id": "4",
+      "customerId": 4,
+      "body": "too big for my living room",
+      "plantId": 3
+    }
+  ],
+  "agents": [
+    {
+      "id": "1",
+      "salary": 1000,
+      "workHours": 40,
+      "name": "Barry Bumblebee",
+      "customers": [
+        {
+          "id": 0,
+          "name": "Wally Walrus",
+          "transactionIds": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": 1,
+          "name": "Po Ro Penguin",
+          "transactionIds": [
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Zee Zebra",
+          "transactionIds": [
+            7,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "salary": 2500,
+      "workHours": 37.5,
+      "name": "Dotty Duck",
+      "customers": [
+        {
+          "id": 0,
+          "name": "Woofie Wolf",
+          "transactionIds": [
+            9,
+            10
+          ]
+        },
+        {
+          "id": 1,
+          "name": "Little Monkey",
+          "transactionIds": [
+            11,
+            12
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Miss Piggie",
+          "transactionIds": [
+            13,
+            14,
+            15
+          ]
+        }
+      ]
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

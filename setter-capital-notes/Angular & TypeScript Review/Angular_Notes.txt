@@ -1,0 +1,16 @@
+MEAN -> MongoDB, Express, Angular, Node.js
+
+Routing, HTTP, Dependency injection
+TypeScript
+
+RxJS library (observables) -> Efficient, asynchronous Programming
+
+Components are pieces of UI including template, logic and styling
+    Reusable and can be embedded into templace as XML-like tag
+
+Services are tasked to do one thing -> ie: Data fetching, input validation, etc.
+
+CLI -> npm install -g @angular/cli
+    ng new my-app
+    ng build
+    
